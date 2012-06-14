@@ -80,8 +80,10 @@ public class QRobot extends AdvancedRobot {
             }
             r.close();
         } catch (IOException e) {
+			// TODO: Should initial raw data here
             e.printStackTrace();
         } catch (NumberFormatException e) {
+			// TODO: Should initial raw data here
             e.printStackTrace();
         }
     }
@@ -129,8 +131,7 @@ public class QRobot extends AdvancedRobot {
         if(mPreviousAction != NOACTION){
             executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
         }
-        
-        
+		
         int action = decideStratgyFromEnvironmentState();
         switch (action) {
         case 0:
@@ -190,7 +191,6 @@ public class QRobot extends AdvancedRobot {
         }
         //printRawTable();
         System.out.println("-----------------on hit robot----------");
-       
         
         int action = decideStratgyFromEnvironmentState();
         switch (action) {
@@ -221,11 +221,8 @@ public class QRobot extends AdvancedRobot {
             break;
         }
         
-        
-        
-        mPreviousAction = 0;
-        mPreviousState = ONHIT;
-                
+		mPreviousAction = 0;
+        mPreviousState = ONHIT;        
     }
 
     public void onHitByBullet(HitByBulletEvent event) {
@@ -256,24 +253,10 @@ public class QRobot extends AdvancedRobot {
             executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
         }
         
-        System.out.println("Writing File " + System.currentTimeMillis());
-        try {
-            BufferedWriter w = new BufferedWriter(new FileWriter(
-                    getDataFile("count.dat")));
-            String inData = new String();
-            for (String s : mRawData) {
-                inData = inData + s + "\n";
-            }
-            w.write(inData);
-            // PrintStreams don't throw IOExceptions during prints,
-            // they simply set a flag.... so check it here.
-            w.close();
-        } catch (IOException e1) {
-            e1.printStackTrace(out);
-        }
-        
+		this.writeToFile();
         turnRight(36000);
     }
+	
     public void onDeath(DeathEvent e){
         
         String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONHIT);
@@ -284,21 +267,33 @@ public class QRobot extends AdvancedRobot {
             executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
         }
         
+        this.writeToFile();
+    }
+	
+	private void writeToFile() {
         System.out.println("Writing File " + System.currentTimeMillis());
-        try {
-            BufferedWriter w = new BufferedWriter(new FileWriter(getDataFile("count.dat")));
-            String inData = new String();
+		
+		PrintStream w = null;
+		
+		try {
+			w = new PrintStream(new RobocodeFileOutputStream(getDataFile("count.dat")));
+			
+			String inData = new String();
             for (String s : mRawData) {
                 inData = inData + s + "\n";
             }
-            w.write(inData);
+            w.println(inData);
             // PrintStreams don't throw IOExceptions during prints,
             // they simply set a flag.... so check it here.
             w.close();
         } catch (IOException e1) {
             e1.printStackTrace(out);
-        }
-    }
+        } finally {
+			if (w != null) {
+				w.close();
+			}
+		}
+	}
     
     private void setCurrentState(int state_number){
         mCurrentState = state_number;
@@ -319,6 +314,7 @@ public class QRobot extends AdvancedRobot {
         }
         return Qvalue;
     }
+	
     private boolean updateQValueByStateAndAction(ArrayList<String> rawData, int stateNumber, int actionNumber, double newQValue){
         ArrayList<String> data = rawData;
         for(int i = 0; i < data.size(); i++){
