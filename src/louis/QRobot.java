@@ -36,6 +36,7 @@ public class QRobot extends AdvancedRobot {
      */
     
     //private HashMap<Integer, ArrayList<Double>> mQValueTable;
+    private static final String QLearningDataFile = "count.dat";
     private ArrayList<String> mRawData = new ArrayList<String>();
 
     private final double gamma = 0.9;
@@ -48,8 +49,10 @@ public class QRobot extends AdvancedRobot {
     private static final int ONHIT = 2;
     private static final int ONHITBYBULLET = 3;
     
-    private final int onHitReward = 1;
-    private final int onHitByBulletReward = -1;
+    private static final int onWinReward = 100;
+    private static final int onDeathReward = -100;
+    private static final int onHitReward = 1;
+    private static final int onHitByBulletReward = -1;
     
     double gunTurnAmt; // How much to turn our gun when searching
     private String trackName = null;
@@ -108,7 +111,7 @@ public class QRobot extends AdvancedRobot {
         try {
             readTable();
             //printRawTable();
-            setCurrentState(STARTSTATE);
+            mCurrentState = STARTSTATE;
             mPreviousState = STARTSTATE;
             mPreviousAction = 0;
         } catch (Exception e) {
@@ -129,7 +132,7 @@ public class QRobot extends AdvancedRobot {
         //judge whether the state is 
         mCurrentState = ONSCAN1;
         //printRawTable();
-        String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONSCAN1);
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONSCAN1);
         int reward = 0;
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         //System.out.println("max Q is " + maxQvalue);
@@ -187,12 +190,11 @@ public class QRobot extends AdvancedRobot {
 
     public void onHitRobot(HitRobotEvent e){
         mCurrentState = ONHIT;
-        String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONHIT);
-        int reward = 1;
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != NOACTION){
-            executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
+            executeQLearningFunction(mRawData, QRobot.onHitReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         //printRawTable();
         System.out.println("-----------------on hit robot----------");
@@ -232,11 +234,11 @@ public class QRobot extends AdvancedRobot {
 
     public void onHitByBullet(HitByBulletEvent event) {
         mCurrentState = ONHITBYBULLET;
-        String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONHITBYBULLET);
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHITBYBULLET);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != NOACTION){
-            executeQLearningFunction(mRawData, onHitByBulletReward, maxQvalue, mPreviousState, mPreviousAction);
+            executeQLearningFunction(mRawData, QRobot.onHitByBulletReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         System.out.println("-----------------on hit by bullet----------");
         
@@ -285,46 +287,40 @@ public class QRobot extends AdvancedRobot {
 
     public void onWin(WinEvent e) {
         // Victory dance
-        String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONHIT);
-        int reward = 100;
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != NOACTION && mPreviousState != STARTSTATE){
-            executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
+            executeQLearningFunction(mRawData, QRobot.onWinReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         
-		this.writeToFile();
+        this.writeToFile(mRawData, QLearningDataFile);
         turnRight(36000);
     }
 	
     public void onDeath(DeathEvent e){
         
-        String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONHIT);
-        int reward = -100;
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != NOACTION && mPreviousState != STARTSTATE){
-            executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
+            executeQLearningFunction(mRawData, QRobot.onDeathReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         
-        this.writeToFile();
+        this.writeToFile(mRawData, QLearningDataFile);
     }
 	
-	private void writeToFile() {
-        System.out.println("Writing File " + System.currentTimeMillis());
-		
+	private void writeToFile(ArrayList<String> rawData, String fileName) {
+        //System.out.println("Writing File " + System.currentTimeMillis());
 		PrintStream w = null;
-		
 		try {
-			w = new PrintStream(new RobocodeFileOutputStream(getDataFile("count.dat")));
+			w = new PrintStream(new RobocodeFileOutputStream(getDataFile(fileName)));
 			
 			String inData = new String();
-            for (String s : mRawData) {
+            for (String s : rawData) {
                 inData = inData + s + "\n";
             }
             w.println(inData);
-            // PrintStreams don't throw IOExceptions during prints,
-            // they simply set a flag.... so check it here.
             w.close();
         } catch (IOException e1) {
             e1.printStackTrace(out);
@@ -335,74 +331,11 @@ public class QRobot extends AdvancedRobot {
 		}
 	}
     
-    private void setCurrentState(int state_number){
-        mCurrentState = state_number;
-    }
-    
-    private double getQValueByStateAndAction(ArrayList<String> rawData, int stateNumber, int actionNumber){
-        int Qvalue = 0;
-        ArrayList<String> data = rawData;
-        for(int i = 0; i < data.size(); i++){
-            String[] splited_row = data.get(i).split(" ");
-            if (splited_row.length == 3) {
-                int state = Integer.parseInt(splited_row[0]);
-                int action = Integer.parseInt(splited_row[1]);
-                if(stateNumber == state && actionNumber == action){
-                    return Double.parseDouble(splited_row[2]);
-                }
-            }
-        }
-        return Qvalue;
-    }
-	
-    private boolean updateQValueByStateAndAction(ArrayList<String> rawData, int stateNumber, int actionNumber, double newQValue){
-        ArrayList<String> data = rawData;
-        for(int i = 0; i < data.size(); i++){
-            String[] splited_row = data.get(i).split(" ");
-            if (splited_row.length == 3) {
-                int state = Integer.parseInt(splited_row[0]);
-                int action = Integer.parseInt(splited_row[1]);
-                if(stateNumber == state && actionNumber == action){
-                    String newRowString = state + " " + action + " " + Double.toString(newQValue);
-                    data.set(i, newRowString);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
     private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, int previousState, int previousAction){
-        double oldValue = getQValueByStateAndAction(rawData, previousState, previousAction);
+        double oldValue = Tool.getQValueByStateAndAction(rawData, previousState, previousAction);
         double newValue = oldValue + alpha*( (double)reward + gamma*maxQvalue - oldValue);
-        updateQValueByStateAndAction(rawData, previousState, previousAction, newValue);
+        Tool.updateQValueByStateAndAction(rawData, previousState, previousAction, newValue);
     }
     
-    private ArrayList<String> getQValueDataRows(ArrayList<String> rawData, int state){
-        ArrayList<String> actionsUnderState = new ArrayList<String>();
-        for(String row : rawData){
-            String[] splited = row.split(" ");
-            if(splited.length == 3 && Integer.parseInt(splited[0]) == state){
-                actionsUnderState.add(row);
-            }
-        }
-        return actionsUnderState;
-    }
-    private String getMaxQValueUnderState(ArrayList<String> rawData, int state){
-        ArrayList<String> actionsUnderState = getQValueDataRows(rawData, state);
-        double maxQ = -1000;
-        String maxRow = null;
-        for(String row : actionsUnderState){
-            String[] splited = row.split(" ");
-            if(splited.length == 3){
-                double value = Double.parseDouble(splited[2]);
-                if(value > maxQ){
-                    maxQ = value;
-                    maxRow = row;
-                }
-            }
-        }
-        return maxRow;
-    }
 }               
 
