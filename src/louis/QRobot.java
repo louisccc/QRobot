@@ -52,6 +52,9 @@ public class QRobot extends AdvancedRobot {
     double gunTurnAmt; // How much to turn our gun when searching
     private String trackName = null;
     
+    double bulletPower = 1;  /*Narchi*/
+    boolean hitEnemy; /*Narchi*/
+    
     
     private int mCurrentState;
     int dist = 50; // distance to move when we're hit
@@ -229,12 +232,47 @@ public class QRobot extends AdvancedRobot {
     }
 
     public void onHitByBullet(HitByBulletEvent event) {
+        mCurrentState = ONHITBYBULLET;
+        String maxQvalueUnderCurrentStateRow = getMaxQValueUnderState(mRawData, ONHITBYBULLET);
+        double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
+        
+        if(mPreviousAction != NOACTION){
+            executeQLearningFunction(mRawData, onHitByBulletReward, maxQvalue, mPreviousState, mPreviousAction);
+        }
         System.out.println("-----------------on hit by bullet----------");
-        turnRight(normalRelativeAngleDegrees(90 - (getHeading() - event.getHeading())));
+        
+        int action = decideStratgyFromEnvironmentState();
+        mPreviousAction = action;
+        mPreviousState = ONHITBYBULLET;
+        switch(action){
+        case 0: {
+            double absoluteBearing = getHeading() + event.getBearing();
+            double bearingFromGun = normalRelativeAngleDegrees(absoluteBearing - getGunHeading());
+            turnLeft(event.getBearing() + 100);
+            ahead(200);
+            turnRight(360);
+            turnGunRight(bearingFromGun);
+            if (getGunHeat() == 0) {
+                if (this.hitEnemy) {
+                    this.bulletPower += 0.5;
+                } else {
+                    this.bulletPower -= 0.5;
+                }
+                fire(this.bulletPower);
+            }
+            ahead(50);
+            break;
+        }
+        case 1: {
+          //track fire's strategy
+            turnRight(normalRelativeAngleDegrees(90 - (getHeading() - event.getHeading())));
 
-        ahead(dist);
-        dist *= -1;
-        scan();
+            ahead(dist);
+            dist *= -1;
+            scan();
+            break;
+        }
+        }
         
     }
     
