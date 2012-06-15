@@ -286,15 +286,15 @@ public class QRobot extends AdvancedRobot {
     }
 
     public void onWin(WinEvent e) {
-        // Victory dance
+        
         String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != NOACTION && mPreviousState != STARTSTATE){
             executeQLearningFunction(mRawData, QRobot.onWinReward, maxQvalue, mPreviousState, mPreviousAction);
         }
-        
         this.writeToFile(mRawData, QLearningDataFile);
+     // Victory dance
         turnRight(36000);
     }
 	
