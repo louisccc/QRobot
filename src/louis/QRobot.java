@@ -72,7 +72,7 @@ public class QRobot extends AdvancedRobot {
     
     public void initRawData(ArrayList<String> rawdata){
         //int num_allState = DefVariable.EVENTCOUNT;
-        
+        ArrayList<String> allStates = RobotState.allposibleState();
 /*        rawdata.add(DefVariable.STATE_START + " 0 0\n");
         
         // init on scan robot event 

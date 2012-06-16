@@ -1,5 +1,8 @@
 package louis;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 public class RobotState {
     
     private static final int NUM_ATTR = 6;
@@ -76,4 +79,37 @@ public class RobotState {
         return mScanFreshness;    
     }
     
+    public static ArrayList<String> allposibleState(){
+        ArrayList<String> all = new ArrayList<String>();
+        for (int i = 0; i < DefVariable.MAX_DISTANCE; i++) {
+            for (int j = 0; j < DefVariable.MAX_ENEMY; j++) {
+                for (int k = 0; k < DefVariable.MAX_EVENT; k++) {
+                    for (int l = 0; l < DefVariable.MAX_FRESHNESS; l++) {
+                        for (int m = 0; m < DefVariable.MAX_POWER; m++) {
+                            for (int n = 0; n < DefVariable.MAX_ZONE; n++) {
+                                all.add(n + "," + j + "," + m + "," + i + "," + k + "," + l);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return all;
+    }
+
+    public static ArrayList<String> allposibleState(int eventNumber) {
+        ArrayList<String> all = new ArrayList<String>();
+        for (int i = 0; i < DefVariable.MAX_DISTANCE; i++) {
+            for (int j = 0; j < DefVariable.MAX_ENEMY; j++) {
+                for (int l = 0; l < DefVariable.MAX_FRESHNESS; l++) {
+                    for (int m = 0; m < DefVariable.MAX_POWER; m++) {
+                        for (int n = 0; n < DefVariable.MAX_ZONE; n++) {
+                            all.add(n + "," + j + "," + m + "," + i + "," + eventNumber + "," + l);
+                        }
+                    }
+                }
+            }
+        }
+        return all;
+    }
 }

@@ -28,4 +28,13 @@ public class DefVariable {
     public static final int STATE_ONHIT = 2;
     public static final int STATE_ONHITBYBULLET = 3;
     public static final int STATE_END = 4;
+    
+    
+    public static final int MAX_ZONE = 1;
+    public static final int MAX_ENEMY = 5;
+    public static final int MAX_POWER = 5;
+    public static final int MAX_DISTANCE = 5;
+    public static final int MAX_EVENT = 5;
+    public static final int MAX_FRESHNESS = 5;
+    
 }
