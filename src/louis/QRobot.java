@@ -12,17 +12,11 @@ import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 import java.awt.*;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Random;
 
-import javax.xml.crypto.Data;
 
 /**
  * TrackFire - a sample robot by Mathew Nelson, and maintained by Flemming N. Larsen
@@ -46,12 +40,14 @@ public class QRobot extends AdvancedRobot {
     boolean hitEnemy; /*Narchi*/
     
     
-    private int mCurrentState;
+    private RobotState mCurrentState;
     int dist = 50; // distance to move when we're hit
-    private int mPreviousState = -1;
+    private RobotState mPreviousState;
     private int mPreviousAction = -1;
     
-    public int decideStratgyFromEnvironmentState(int state, int num_actions){
+    private ScannedRobotEvent lastseen = null;
+    
+    public int decideStratgyFromEnvironmentState(RobotState state, int num_actions){
         
         ArrayList<Double> actionsQs = new ArrayList<Double>();
         double sum = 0;
@@ -140,8 +136,8 @@ public class QRobot extends AdvancedRobot {
         try {
             readTable();
             //printRawTable();
-            mCurrentState = DefVariable.STATE_START;
-            mPreviousState = DefVariable.STATE_START;
+            mCurrentState = new RobotState();
+            mPreviousState = new RobotState();
             mPreviousAction = 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,20 +152,20 @@ public class QRobot extends AdvancedRobot {
      * onScannedRobot:  We have a target.  Go get it.
      */
     public void onScannedRobot(ScannedRobotEvent e) {
-        // Calculate exact location of the robot
-        //mPreviousAction = xxx
-        //judge whether the state is 
-        mCurrentState = DefVariable.STATE_ONSCAN1;
-        //printRawTable();
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_ONSCAN1);
-        int reward = 0;
+
+        mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_ONSCAN1);
+        
+        lastseen = e;
+        
+        //mCurrentState = DefVariable.STATE_ONSCAN1;
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, mCurrentState);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        //System.out.println("max Q is " + maxQvalue);
         if(mPreviousAction != DefVariable.NOACTION){
-            executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
+            executeQLearningFunction(mRawData, DefVariable.onScanRobotReward, maxQvalue, mPreviousState, mPreviousAction);
         }
 		
-        int action = decideStratgyFromEnvironmentState(DefVariable.STATE_ONSCAN1, DefVariable.ACTIONS_UNDER_ONSCANROBOT);
+        int action = decideStratgyFromEnvironmentState(mCurrentState, DefVariable.ACTIONS_UNDER_ONSCANROBOT);
+        
         mPreviousState = mCurrentState;
         mPreviousAction = action;
         switch (action) {
@@ -219,19 +215,21 @@ public class QRobot extends AdvancedRobot {
     }
 
     public void onHitRobot(HitRobotEvent e){
-        mCurrentState = DefVariable.STATE_ONHIT;
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_ONHIT);
+        
+        mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_ONHIT);
+        
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, mCurrentState);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != DefVariable.NOACTION){
             executeQLearningFunction(mRawData, DefVariable.onHitReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         //printRawTable();
-        System.out.println("-----------------on hit robot----------");
+        //System.out.println("-----------------on hit robot----------");
          
-        int action = decideStratgyFromEnvironmentState(DefVariable.STATE_ONHIT, DefVariable.ACTIONS_UNDER_ONHITROBOT);
+        int action = decideStratgyFromEnvironmentState(mCurrentState, DefVariable.ACTIONS_UNDER_ONHITROBOT);
         mPreviousAction = action;
-        mPreviousState = DefVariable.STATE_ONHIT;
+        mPreviousState = mCurrentState;
         switch (action) {
         case 0:
             //Conservative strategy
@@ -264,8 +262,9 @@ public class QRobot extends AdvancedRobot {
     }
 
     public void onHitByBullet(HitByBulletEvent event) {
-        mCurrentState = DefVariable.STATE_ONHITBYBULLET;
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_ONHITBYBULLET);
+        mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_ONHITBYBULLET);
+        
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, mCurrentState);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
         if(mPreviousAction != DefVariable.NOACTION){
@@ -273,9 +272,9 @@ public class QRobot extends AdvancedRobot {
         }
         //System.out.println("-----------------on hit by bullet----------");
         
-        int action = decideStratgyFromEnvironmentState(DefVariable.STATE_ONHITBYBULLET, DefVariable.ACTIONS_UNDER_ONHITBYBULLET);
+        int action = decideStratgyFromEnvironmentState(mCurrentState, DefVariable.ACTIONS_UNDER_ONHITBYBULLET);
         mPreviousAction = action;
-        mPreviousState = DefVariable.STATE_ONHITBYBULLET;
+        mPreviousState = mCurrentState;
         switch(action){
         case 0: {
             double absoluteBearing = getHeading() + event.getBearing();
@@ -318,11 +317,11 @@ public class QRobot extends AdvancedRobot {
 
     public void onWin(WinEvent e) {
         
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
-        double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        
-        if(mPreviousAction != DefVariable.NOACTION && mPreviousState != DefVariable.STATE_START){
-            executeQLearningFunction(mRawData, DefVariable.onWinReward, maxQvalue, mPreviousState, mPreviousAction);
+        //String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
+        //double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
+        // TODO give max Q 0 ???
+        if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
+            executeQLearningFunction(mRawData, DefVariable.onWinReward, 0, mPreviousState, mPreviousAction);
         }
         this.writeToFile(mRawData, QLearningDataFile);
      // Victory dance
@@ -331,11 +330,11 @@ public class QRobot extends AdvancedRobot {
 	
     public void onDeath(DeathEvent e){
         
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
-        double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
+        //String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
+        //double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
-        if(mPreviousAction != DefVariable.NOACTION && mPreviousState != DefVariable.STATE_START){
-            executeQLearningFunction(mRawData, DefVariable.onDeathReward, maxQvalue, mPreviousState, mPreviousAction);
+        if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
+            executeQLearningFunction(mRawData, DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
         }
         
         this.writeToFile(mRawData, QLearningDataFile);
@@ -362,13 +361,90 @@ public class QRobot extends AdvancedRobot {
 		}
 	}
     
-    private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, int previousState, int previousAction){
+    private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, RobotState previousState, int previousAction){
         double alpha = DefVariable.ALPHA;
         double gamma = DefVariable.GAMMA;
         double oldValue = Tool.getQValueByStateAndAction(rawData, previousState, previousAction);
         double newValue = oldValue + alpha*( (double)reward + gamma*maxQvalue - oldValue);
         Tool.updateQValueByStateAndAction(rawData, previousState, previousAction, newValue);
+        
     }
     
+    
+    private RobotState getStateByCurrentEnvironment(int eventNumber){
+        int numberEnemy = getOthers();
+        int zoneNumber = getAreaZone(getX(), getY());
+        int powerLevel = getPowerLevel(getEnergy());
+        int nearestDistance = getDistanceWithRobot(lastseen);
+        int freshness = getTimeWithRobot(lastseen);
+        int event = eventNumber;
+        
+        RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel, nearestDistance, event, freshness);
+        return state;
+    }
+    private int getAreaZone(double x, double y){
+        return 0;
+    }
+    private int getDistanceWithRobot(ScannedRobotEvent e){
+        
+        if(e == null){
+            return 5;
+        }
+        double x = e.getDistance();
+        if(x > 0 && x < 100){
+            return 0;
+        }
+        else if(x >= 100 && x < 200){
+            return 1;
+        }
+        else if(x>=200 && x<300){
+            return 2;
+        }
+        else if(x>=300 && x<400){
+            return 3;
+        }
+        else if(x>=400){
+            return 4;
+        }
+        return -1;
+    }
+    
+    private int getTimeWithRobot(ScannedRobotEvent e){
+        if (e == null){
+            return 5;
+        }
+        double diff = getTime() - e.getTime();
+        if(diff > 0 && diff < 10){
+            return 0;
+        }
+        else if(diff >= 10 && diff < 20){
+            return 1;
+        }
+        else if(diff >= 20 && diff < 30){
+            return 2;
+        }
+        else if(diff >= 30 && diff < 40){
+            return 3;
+        }
+        else if(diff >= 40){
+            return 4;
+        }
+        return -1;
+    }
+    private int getPowerLevel(double power){
+        if(power > 0 && power < 10){
+            return 0;
+        }
+        else if(power >= 10 && power < 20){
+            return 1;
+        }
+        else if(power >= 20 && power < 30){
+            return 2;
+        }
+        else if(power >= 30 && power < 40){
+            return 3;
+        }
+            return 4;
+    }
 }               
 
