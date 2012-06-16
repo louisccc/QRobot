@@ -18,4 +18,13 @@ public class DefVariable {
     
     
     public static boolean DEBUG = true;
+    
+    
+    public static final int NOACTION = -1;
+    
+    public static final int STATE_START = 0;
+    public static final int STATE_ONSCAN1 = 1;
+    public static final int STATE_ONHIT = 2;
+    public static final int STATE_ONHITBYBULLET = 3;
+    public static final int STATE_END = 4;
 }

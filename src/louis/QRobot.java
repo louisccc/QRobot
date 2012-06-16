@@ -39,16 +39,6 @@ public class QRobot extends AdvancedRobot {
     private static final String QLearningDataFile = "count.dat";
     private ArrayList<String> mRawData = new ArrayList<String>();
 
-
-    private static final int STARTSTATE = 0;
-    private static final int NOACTION = -1;
-    
-    private static final int ONSCAN1 = 1;
-    private static final int ONHIT = 2;
-    private static final int ONHITBYBULLET = 3;
-    
-
-    
     double gunTurnAmt; // How much to turn our gun when searching
     private String trackName = null;
     
@@ -116,18 +106,22 @@ public class QRobot extends AdvancedRobot {
     public void initRawData(ArrayList<String> rawdata){
         //int num_allState = DefVariable.EVENTCOUNT;
         
+        rawdata.add(DefVariable.STATE_START + " 0 0\n");
+        
         // init on scan robot event 
         for(int i = 0 ; i < DefVariable.ACTIONS_UNDER_ONSCANROBOT; i++){
-            rawdata.add(ONSCAN1 + " " + i + " " + "0\n");
+            rawdata.add(DefVariable.STATE_ONSCAN1 + " " + i + " " + "0\n");
         }
         
         for(int i = 0; i < DefVariable.ACTIONS_UNDER_ONHITROBOT; i++){
-            rawdata.add(ONHIT + " " + i + " " + "0\n");
+            rawdata.add(DefVariable.STATE_ONHIT + " " + i + " " + "0\n");
         }
         
         for(int i = 0; i < DefVariable.ACTIONS_UNDER_ONHITROBOT; i++){
-            rawdata.add(ONHITBYBULLET + " " + i + " " + "0\n");
+            rawdata.add(DefVariable.STATE_ONHITBYBULLET + " " + i + " " + "0\n");
         }
+        
+        rawdata.add(DefVariable.STATE_END + " 0 0\n");
     }
     
     public void printRawTable() {
@@ -146,8 +140,8 @@ public class QRobot extends AdvancedRobot {
         try {
             readTable();
             //printRawTable();
-            mCurrentState = STARTSTATE;
-            mPreviousState = STARTSTATE;
+            mCurrentState = DefVariable.STATE_START;
+            mPreviousState = DefVariable.STATE_START;
             mPreviousAction = 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,17 +159,17 @@ public class QRobot extends AdvancedRobot {
         // Calculate exact location of the robot
         //mPreviousAction = xxx
         //judge whether the state is 
-        mCurrentState = ONSCAN1;
+        mCurrentState = DefVariable.STATE_ONSCAN1;
         //printRawTable();
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONSCAN1);
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_ONSCAN1);
         int reward = 0;
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         //System.out.println("max Q is " + maxQvalue);
-        if(mPreviousAction != NOACTION){
+        if(mPreviousAction != DefVariable.NOACTION){
             executeQLearningFunction(mRawData, reward, maxQvalue, mPreviousState, mPreviousAction);
         }
 		
-        int action = decideStratgyFromEnvironmentState(ONSCAN1, DefVariable.ACTIONS_UNDER_ONSCANROBOT);
+        int action = decideStratgyFromEnvironmentState(DefVariable.STATE_ONSCAN1, DefVariable.ACTIONS_UNDER_ONSCANROBOT);
         mPreviousState = mCurrentState;
         mPreviousAction = action;
         switch (action) {
@@ -225,19 +219,19 @@ public class QRobot extends AdvancedRobot {
     }
 
     public void onHitRobot(HitRobotEvent e){
-        mCurrentState = ONHIT;
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
+        mCurrentState = DefVariable.STATE_ONHIT;
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_ONHIT);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
-        if(mPreviousAction != NOACTION){
+        if(mPreviousAction != DefVariable.NOACTION){
             executeQLearningFunction(mRawData, DefVariable.onHitReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         //printRawTable();
         System.out.println("-----------------on hit robot----------");
          
-        int action = decideStratgyFromEnvironmentState(ONHIT, DefVariable.ACTIONS_UNDER_ONHITROBOT);
+        int action = decideStratgyFromEnvironmentState(DefVariable.STATE_ONHIT, DefVariable.ACTIONS_UNDER_ONHITROBOT);
         mPreviousAction = action;
-        mPreviousState = ONHIT;
+        mPreviousState = DefVariable.STATE_ONHIT;
         switch (action) {
         case 0:
             //Conservative strategy
@@ -270,18 +264,18 @@ public class QRobot extends AdvancedRobot {
     }
 
     public void onHitByBullet(HitByBulletEvent event) {
-        mCurrentState = ONHITBYBULLET;
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHITBYBULLET);
+        mCurrentState = DefVariable.STATE_ONHITBYBULLET;
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_ONHITBYBULLET);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
-        if(mPreviousAction != NOACTION){
+        if(mPreviousAction != DefVariable.NOACTION){
             executeQLearningFunction(mRawData, DefVariable.onHitByBulletReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         //System.out.println("-----------------on hit by bullet----------");
         
-        int action = decideStratgyFromEnvironmentState(ONHITBYBULLET, DefVariable.ACTIONS_UNDER_ONHITBYBULLET);
+        int action = decideStratgyFromEnvironmentState(DefVariable.STATE_ONHITBYBULLET, DefVariable.ACTIONS_UNDER_ONHITBYBULLET);
         mPreviousAction = action;
-        mPreviousState = ONHITBYBULLET;
+        mPreviousState = DefVariable.STATE_ONHITBYBULLET;
         switch(action){
         case 0: {
             double absoluteBearing = getHeading() + event.getBearing();
@@ -324,10 +318,10 @@ public class QRobot extends AdvancedRobot {
 
     public void onWin(WinEvent e) {
         
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
-        if(mPreviousAction != NOACTION && mPreviousState != STARTSTATE){
+        if(mPreviousAction != DefVariable.NOACTION && mPreviousState != DefVariable.STATE_START){
             executeQLearningFunction(mRawData, DefVariable.onWinReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         this.writeToFile(mRawData, QLearningDataFile);
@@ -337,10 +331,10 @@ public class QRobot extends AdvancedRobot {
 	
     public void onDeath(DeathEvent e){
         
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, ONHIT);
+        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
         double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
         
-        if(mPreviousAction != NOACTION && mPreviousState != STARTSTATE){
+        if(mPreviousAction != DefVariable.NOACTION && mPreviousState != DefVariable.STATE_START){
             executeQLearningFunction(mRawData, DefVariable.onDeathReward, maxQvalue, mPreviousState, mPreviousAction);
         }
         
