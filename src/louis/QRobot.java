@@ -39,9 +39,7 @@ public class QRobot extends AdvancedRobot {
     private static final String QLearningDataFile = "count.dat";
     private ArrayList<String> mRawData = new ArrayList<String>();
 
-    private final double gamma = 0.9;
-    private final double alpha = 0.5;
-    
+
     private static final int STARTSTATE = 0;
     private static final int NOACTION = -1;
     
@@ -64,19 +62,38 @@ public class QRobot extends AdvancedRobot {
     private int mPreviousAction = -1;
     
     public int decideStratgyFromEnvironmentState(int state, int num_actions){
-        int curState = mCurrentState;
-        //int[] actions = getActionsUnderState(state);
-        //int random_action = (int)Math.random()*(actions.length);
-        int random_action = (int)(Math.random()*(num_actions));
         
-        return random_action;
+        ArrayList<Double> actionsQs = new ArrayList<Double>();
+        double sum = 0;
+        for(int i = 0; i < num_actions; i++){
+            double qvalue = Tool.getQValueByStateAndAction(mRawData, state, num_actions);
+            if(qvalue < 0){
+                qvalue = 1;
+            }
+            else{
+                qvalue = qvalue + 1;
+            }
+            sum += qvalue;
+            actionsQs.add(sum);
+        }
+        double random_action = Math.random()*(sum);
+        int action = -1;
+        for(Double value : actionsQs){
+            if(random_action <= value){
+                action = actionsQs.indexOf(value);
+                break;
+            }
+            else 
+                continue;
+        }
+        //if(DefVariable.DEBUG){
+            //System.out.println("value = " + random_action + " so " + "suggest action " + action);
+        //}
+        return action;
     }
 
     public void readTable() throws Exception{
-        //mQValueTable = new HashMap<>();
-        //int roundCount=0;
-        //int battleCount=0;
-        
+
         try {
             BufferedReader r = new BufferedReader(new FileReader(getDataFile("count.dat")));
             String data_row;
@@ -88,12 +105,10 @@ public class QRobot extends AdvancedRobot {
             }
             r.close();
         } catch (IOException e) {
-			// forced to initial raw data here
-            initRawData(mRawData);
+            initRawData(mRawData); // forced to initial raw data here
             e.printStackTrace();
         } catch (NumberFormatException e) {
-            // forced to initial raw data here
-            initRawData(mRawData);
+            initRawData(mRawData); // forced to initial raw data here
             e.printStackTrace();
         }
     }
@@ -161,6 +176,8 @@ public class QRobot extends AdvancedRobot {
         }
 		
         int action = decideStratgyFromEnvironmentState(ONSCAN1, DefVariable.ACTIONS_UNDER_ONSCANROBOT);
+        mPreviousState = mCurrentState;
+        mPreviousAction = action;
         switch (action) {
         case 0:
             double absoluteBearing = getHeading() + e.getBearing();
@@ -204,8 +221,7 @@ public class QRobot extends AdvancedRobot {
         default:
             break;
         }
-        mPreviousState = mCurrentState;
-        mPreviousAction = action;
+        
     }
 
     public void onHitRobot(HitRobotEvent e){
@@ -220,6 +236,8 @@ public class QRobot extends AdvancedRobot {
         System.out.println("-----------------on hit robot----------");
          
         int action = decideStratgyFromEnvironmentState(ONHIT, DefVariable.ACTIONS_UNDER_ONHITROBOT);
+        mPreviousAction = action;
+        mPreviousState = ONHIT;
         switch (action) {
         case 0:
             //Conservative strategy
@@ -248,8 +266,7 @@ public class QRobot extends AdvancedRobot {
             break;
         }
         
-		mPreviousAction = 0;
-        mPreviousState = ONHIT;        
+		        
     }
 
     public void onHitByBullet(HitByBulletEvent event) {
@@ -260,7 +277,7 @@ public class QRobot extends AdvancedRobot {
         if(mPreviousAction != NOACTION){
             executeQLearningFunction(mRawData, DefVariable.onHitByBulletReward, maxQvalue, mPreviousState, mPreviousAction);
         }
-        System.out.println("-----------------on hit by bullet----------");
+        //System.out.println("-----------------on hit by bullet----------");
         
         int action = decideStratgyFromEnvironmentState(ONHITBYBULLET, DefVariable.ACTIONS_UNDER_ONHITBYBULLET);
         mPreviousAction = action;
@@ -298,11 +315,11 @@ public class QRobot extends AdvancedRobot {
     }
     
     public void onHitByRobot(HitRobotEvent event) {
-        System.out.println("-----------------on hit by robot----------");
+        //System.out.println("-----------------on hit by robot----------");
     }
     
     public void onHitWall(HitWallEvent event) {
-        System.out.println("-----------------on hit wall----------");
+        //System.out.println("-----------------on hit wall----------");
     }
 
     public void onWin(WinEvent e) {
@@ -352,6 +369,8 @@ public class QRobot extends AdvancedRobot {
 	}
     
     private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, int previousState, int previousAction){
+        double alpha = DefVariable.ALPHA;
+        double gamma = DefVariable.GAMMA;
         double oldValue = Tool.getQValueByStateAndAction(rawData, previousState, previousAction);
         double newValue = oldValue + alpha*( (double)reward + gamma*maxQvalue - oldValue);
         Tool.updateQValueByStateAndAction(rawData, previousState, previousAction, newValue);
