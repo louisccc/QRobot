@@ -117,7 +117,7 @@ public class QRobot extends AdvancedRobot {
             rawdata.add(DefVariable.STATE_ONHIT + " " + i + " " + "0\n");
         }
         
-        for(int i = 0; i < DefVariable.ACTIONS_UNDER_ONHITROBOT; i++){
+        for(int i = 0; i < DefVariable.ACTIONS_UNDER_ONHITBYBULLET; i++){
             rawdata.add(DefVariable.STATE_ONHITBYBULLET + " " + i + " " + "0\n");
         }
         
