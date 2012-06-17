@@ -50,11 +50,11 @@ public class QRobot extends AdvancedRobot {
     private ScannedRobotEvent lastseen = null;
     
     public void readTable() throws Exception{
-
         try {
             BufferedReader r = new BufferedReader(new FileReader(getDataFile("count.dat")));
             String data_row;
             while( (data_row = r.readLine()) !=  null){
+				System.out.println(data_row);
                 String[] splited = data_row.split(" ");
                 if(splited.length == 3){
                     mRawData.add(data_row);
@@ -73,24 +73,34 @@ public class QRobot extends AdvancedRobot {
     public void initRawData(ArrayList<String> rawdata){
         //int num_allState = DefVariable.EVENTCOUNT;
         ArrayList<String> allStates = RobotState.allposibleState();
-/*        rawdata.add(DefVariable.STATE_START + " 0 0\n");
-        
-        // init on scan robot event 
-        for(int i = 0 ; i < DefVariable.ACTIONS_UNDER_ONSCANROBOT; i++){
-            rawdata.add(DefVariable.STATE_ONSCAN1 + " " + i + " " + "0\n");
-        }
-        
-        for(int i = 0; i < DefVariable.ACTIONS_UNDER_ONHITROBOT; i++){
-            rawdata.add(DefVariable.STATE_ONHIT + " " + i + " " + "0\n");
-        }
-        
-        for(int i = 0; i < DefVariable.ACTIONS_UNDER_ONHITBYBULLET; i++){
-            rawdata.add(DefVariable.STATE_ONHITBYBULLET + " " + i + " " + "0\n");
-        }
-        
-        rawdata.add(DefVariable.STATE_END + " 0 0\n");*/
 		
+		for (String s1 : RobotState.allposibleState(DefVariable.STATE_START)) {
+			for (String s2 : NoEventAction.getAllPossibleActions()) {
+				rawdata.add(s1 + " " + s2 + " 0");
+			}
+		}
 		
+		for (String s1 : RobotState.allposibleState(DefVariable.STATE_ONSCAN1)) {
+			for (String s2 : OnScannedRobotAction.getAllPossibleActions()) {
+				rawdata.add(s1 + " " + s2 + " 0");
+			}
+		}
+		
+		for (String s1 : RobotState.allposibleState(DefVariable.STATE_ONHIT)) {
+			for (String s2 : OnHitRobotAction.getAllPossibleActions()) {
+				rawdata.add(s1 + " " + s2 + " 0");
+			}
+		}
+		
+		for (String s1 : RobotState.allposibleState(DefVariable.STATE_ONHITBYBULLET)) {
+			for (String s2 : OnHitByBulletAction.getAllPossibleActions()) {
+				rawdata.add(s1 + " " + s2 + " 0");
+			}
+		}
+		
+		for (String s1 : RobotState.allposibleState(DefVariable.STATE_END)) {
+			rawdata.add(s1 + " " + " 0 0");
+		}
     }
     
     public void printRawTable() {
@@ -115,8 +125,13 @@ public class QRobot extends AdvancedRobot {
             e.printStackTrace();
         }
         // Loop forever
-        while (true) {            
+        while (true) {
+//			turnGunRight(10);
+
 			// Decide action
+			mPreviousState = mCurrentState;
+			mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);			
+			
 			String actionId = Tool.decideStratgyFromEnvironmentState(mRawData, mCurrentState);
             mPreviousAction = new NoEventAction(actionId);
 			mPreviousAction.run(this);
@@ -261,7 +276,7 @@ public class QRobot extends AdvancedRobot {
         int nearestDistance = getDistanceWithRobot(lastseen);
         int freshness = getTimeWithRobot(lastseen);
         int event = eventNumber;
-        
+		
         RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel, nearestDistance, event, freshness);
         return state;
     }
@@ -271,7 +286,7 @@ public class QRobot extends AdvancedRobot {
     private int getDistanceWithRobot(ScannedRobotEvent e){
         
         if(e == null){
-            return 5;
+            return 4;
         }
         double x = e.getDistance();
         if(x > 0 && x < 100){
@@ -294,7 +309,7 @@ public class QRobot extends AdvancedRobot {
     
     private int getTimeWithRobot(ScannedRobotEvent e){
         if (e == null){
-            return 5;
+            return 4;
         }
         double diff = getTime() - e.getTime();
         if(diff > 0 && diff < 10){

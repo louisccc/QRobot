@@ -75,6 +75,8 @@ public class Tool {
 		ArrayList<String> actionsId = new ArrayList<String>();
 		double sum = 0;
 		
+//		System.out.println(rawData.size());
+		
 		ArrayList<String> actionsUnderState = getQValueDataRows(rawData, state);
         for(String row : actionsUnderState){
             String[] splited = row.split(" ");
@@ -95,9 +97,12 @@ public class Tool {
         double random_action = Math.random()*(sum);
         for(Double value : actionsQs){
             if(random_action <= value){
+//				System.out.println(value + " " + actionsId.get(actionsQs.indexOf(value)));
                 return actionsId.get(actionsQs.indexOf(value));
 			}
         }
+		System.out.println("ERROR: Can't decide action for given state: " + state.toString());
+
 		return null;
     }
 }

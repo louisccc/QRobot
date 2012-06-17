@@ -6,7 +6,7 @@ import robocode.ScannedRobotEvent;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 public class OnScannedRobotAction extends Action {
-	private static String[] allPossibleActionIds = {"51", "52", "53"};
+	private static String[] allPossibleActionIds = {"51", "52", "53", "54", "55", "56", "57", "58", "59"};
 	protected ScannedRobotEvent event;
 	
 	public static String[] getAllPossibleActions() {
@@ -60,6 +60,26 @@ public class OnScannedRobotAction extends Action {
 				// Call scan again, before we turn the gun
 				robot.scan();
 				break;
+			case 54:
+				robot.turnGunRight(10);
+				break;
+			case 55:
+				robot.turnGunLeft(10);
+				break;
+			case 56:
+				robot.ahead(10);
+				break;
+			case 57:
+				robot.back(10);
+				break;
+			case 58:
+				robot.turnRight(10);
+				break;
+			case 59:
+				robot.turnLeft(10);
+				break;
+
+				
 			default: System.out.println("Error: Unrecognize action ID for OnScannedRobotAction: " + id);
 				break;
 		}
