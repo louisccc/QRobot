@@ -38,7 +38,8 @@ public class QRobot extends AdvancedRobot {
     private RobotState mCurrentState;
     int dist = 50; // distance to move when we're hit
     private RobotState mPreviousState;
-	Integer previousAction;
+	Integer mPreviousAction;
+	long mPreviousActionStartedTurn;
     
     private ScannedRobotEvent lastseen = null;
     private DataInterface mDataInterface;
@@ -61,16 +62,21 @@ public class QRobot extends AdvancedRobot {
         }
         //mDataInterface.printAllData();
     }
-	
+		
 	Driver driver = null;
 	
 	Driver chooseDriver() {
 		mPreviousState = mCurrentState;
-		mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);
+		mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);		
 		
-		Integer actionId = mDataInterface.decideStratgyFromEnvironmentState(mCurrentState);		
+		Integer actionId = mDataInterface.decideStratgyFromEnvironmentState(mCurrentState);
+		
 		Driver d = DriverManager.getDriver(actionId, this);
 		d.init();
+		
+		mPreviousAction = actionId;
+		mPreviousActionStartedTurn = getTime();
+
 		return d;
 	}
     
@@ -87,12 +93,23 @@ public class QRobot extends AdvancedRobot {
             //printRawTable();
             mCurrentState = new RobotState();
             mPreviousState = new RobotState();
+			mPreviousAction = DefVariable.NOACTION;
+			mPreviousActionStartedTurn = getTime();
         } catch (Exception e) {
             e.printStackTrace();
         }
 		
-		driver = chooseDriver();		
+		driver = chooseDriver();
+		
 		while (true) {
+			// Test if driver is expired
+			if (getTime() - mPreviousActionStartedTurn > 50) {
+				if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
+					executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
+				}
+				driver = chooseDriver();
+			}
+			
 			driver.loop();
 		}
     }
@@ -117,21 +134,21 @@ public class QRobot extends AdvancedRobot {
     }
 	
     public void onWin(WinEvent e) {
-//		if(mPreviousAction != null && mPreviousState != null){
-  //          executeQLearningFunction(mRawData, DefVariable.onWinReward, 0, mPreviousState, mPreviousAction);
-    //    }
+		if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
+            executeQLearningFunction(DefVariable.onWinReward, 0, mPreviousState, mPreviousAction);
+        }
 		this.writeToFile(QLearningDataFile);
         turnRight(36000);
     }
 	
     public void onDeath(DeathEvent e){
-//		if(mPreviousAction != null && mPreviousState != null){
-  //          executeQLearningFunction(mRawData, DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
-    //    }
+		if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
+            executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
+        }
 
 		this.writeToFile(QLearningDataFile);
     }
-
+	
 	private void writeToFile(String fileName) {
         //System.out.println("Writing File " + System.currentTimeMillis());
 		PrintStream w = null;
