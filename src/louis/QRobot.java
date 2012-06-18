@@ -103,7 +103,8 @@ public class QRobot extends AdvancedRobot {
 		
 		while (true) {
 			// Test if driver is expired
-			if (getTime() - mPreviousActionStartedTurn > 50) {
+			System.out.println(getTime() + " " +  mPreviousActionStartedTurn);
+			if (getTime() - mPreviousActionStartedTurn > 200) {
 				if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
 					executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
 				}
