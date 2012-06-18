@@ -66,6 +66,8 @@ public class QRobot extends AdvancedRobot {
 	Driver driver = null;
 	
 	Driver chooseDriver() {
+		stop();
+		
 		mPreviousState = mCurrentState;
 		mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);		
 		
@@ -78,6 +80,16 @@ public class QRobot extends AdvancedRobot {
 		mPreviousActionStartedTurn = getTime();
 
 		return d;
+	}
+	
+	public void checkDriverExpire() {
+		// Test if driver is expired
+		if (getTime() - mPreviousActionStartedTurn > 200) {
+			if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
+				executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
+			}
+			driver = chooseDriver();
+		}
 	}
     
 	public void run() {
@@ -102,15 +114,7 @@ public class QRobot extends AdvancedRobot {
 		driver = chooseDriver();
 		
 		while (true) {
-			// Test if driver is expired
-			System.out.println(getTime() + " " +  mPreviousActionStartedTurn);
-			if (getTime() - mPreviousActionStartedTurn > 200) {
-				if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
-					executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
-				}
-				driver = chooseDriver();
-			}
-			
+			checkDriverExpire();			
 			driver.loop();
 		}
     }
@@ -119,18 +123,22 @@ public class QRobot extends AdvancedRobot {
      * onScannedRobot:  We have a target.  Go get it.
      */
     public void onScannedRobot(ScannedRobotEvent e) {
+		checkDriverExpire();			
     	driver.onScannedRobot(e);
     }
 	
     public void onHitRobot(HitRobotEvent e){
+		checkDriverExpire();			
         driver.onHitRobot(e);
     }
 	
     public void onHitByBullet(HitByBulletEvent e) {
+		checkDriverExpire();			
         driver.onHitByBullet(e);
     }
     
     public void onHitWall(HitWallEvent e) {
+		checkDriverExpire();			
 		driver.onHitWall(e);
     }
 	

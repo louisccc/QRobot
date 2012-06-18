@@ -5,6 +5,7 @@ import robocode.Bullet;
 import robocode.BulletHitEvent;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletMissedEvent;
+import robocode.Condition;
 import robocode.DeathEvent;
 import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
@@ -15,6 +16,7 @@ import robocode.WinEvent;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 import java.awt.*;
+import java.io.*;
 
 public class Driver {
 	AdvancedRobot robot;
@@ -73,7 +75,10 @@ public class Driver {
 	
 	/* AdvanceRobot's actions */
 	
+	
+	void	addCustomEvent(Condition condition) { robot.addCustomEvent(condition); }	
 	void	execute() { robot.execute(); }
+	File	getDataFile(String filename) { return robot.getDataFile(filename); }
 	double	getDistanceRemaining() { return robot.getDistanceRemaining(); }
 	double	getGunHeadingRadians() { return robot.getGunHeadingRadians(); }
 	double	getGunTurnRemaining() { return robot.getGunTurnRemaining(); }
@@ -115,6 +120,7 @@ public class Driver {
 	void	turnRadarLeftRadians(double radians) { robot.turnRadarLeftRadians(radians); }
 	void	turnRadarRightRadians(double radians) { robot.turnRadarRightRadians(radians); }
 	void	turnRightRadians(double radians) { robot.turnRightRadians(radians); }
+	void	removeCustomEvent(Condition condition) { robot.removeCustomEvent(condition); }
 	
 	/* Driver's action */
 	
