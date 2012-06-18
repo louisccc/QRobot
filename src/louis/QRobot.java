@@ -105,17 +105,14 @@ public class QRobot extends AdvancedRobot {
     }
 	
     public void onHitRobot(HitRobotEvent e){
-        //System.out.println("-----------------on hit robot----------");
         driver.onHitRobot(e);
     }
 	
     public void onHitByBullet(HitByBulletEvent e) {
-        //System.out.println("-----------------on hit by bullet----------");
         driver.onHitByBullet(e);
     }
     
     public void onHitWall(HitWallEvent e) {
-        //System.out.println("-----------------on hit wall----------");
 		driver.onHitWall(e);
     }
 	
@@ -152,14 +149,13 @@ public class QRobot extends AdvancedRobot {
 		}
 	}
     
-/*    private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, RobotState previousState, Action previousAction){
+    private void executeQLearningFunction(int reward, double maxQvalue, RobotState previousState, Integer previousAction){
         double alpha = DefVariable.ALPHA;
         double gamma = DefVariable.GAMMA;
-        double oldValue = Tool.getQValueByStateAndAction(rawData, previousState, previousAction);
+        double oldValue = mDataInterface.getQValueByStateAndAction(previousState, previousAction);
         double newValue = oldValue + alpha*( (double)reward + gamma*maxQvalue - oldValue);
-        Tool.updateQValueByStateAndAction(rawData, previousState, previousAction, newValue);
-        
-    }*/
+        mDataInterface.updateQValueByStateAndAction(previousState, previousAction, newValue);
+    }
     
     private RobotState getStateByCurrentEnvironment(int eventNumber){
         int numberEnemy = getOthers() > 1 ? 1 : 0;
