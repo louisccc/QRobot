@@ -54,7 +54,6 @@ public class QRobot extends AdvancedRobot {
             BufferedReader r = new BufferedReader(new FileReader(getDataFile("count.dat")));
             String data_row;
             while( (data_row = r.readLine()) !=  null){
-				System.out.println(data_row);
                 String[] splited = data_row.split(" ");
                 if(splited.length == 3){
                     mRawData.add(data_row);
@@ -270,7 +269,7 @@ public class QRobot extends AdvancedRobot {
     }
     
     private RobotState getStateByCurrentEnvironment(int eventNumber){
-        int numberEnemy = getOthers();
+        int numberEnemy = getOthers() > 1 ? 1 : 0;
         int zoneNumber = getAreaZone(getX(), getY());
         int powerLevel = getPowerLevel(getEnergy());
         int nearestDistance = getDistanceWithRobot(lastseen);
@@ -285,7 +284,7 @@ public class QRobot extends AdvancedRobot {
     }
     private int getDistanceWithRobot(ScannedRobotEvent e){
         
-        if(e == null){
+/*        if(e == null){
             return 4;
         }
         double x = e.getDistance();
@@ -304,13 +303,21 @@ public class QRobot extends AdvancedRobot {
         else if(x>=400){
             return 4;
         }
-        return -1;
+        return -1;*/
+		
+		if (e == null) return 1;
+		double x = e.getDistance();
+        if(x > 0 && x < 250){
+            return 0;
+        }
+        else {
+            return 1;
+        }
+
     }
     
     private int getTimeWithRobot(ScannedRobotEvent e){
-        if (e == null){
-            return 4;
-        }
+/*        if (e == null) return 1;
         double diff = getTime() - e.getTime();
         if(diff > 0 && diff < 10){
             return 0;
@@ -327,22 +334,19 @@ public class QRobot extends AdvancedRobot {
         else if(diff >= 40){
             return 4;
         }
-        return -1;
-    }
-    private int getPowerLevel(double power){
-        if(power > 0 && power < 10){
+        return -1;*/
+		if (e == null) return 1;
+        double diff = getTime() - e.getTime();
+        if(diff < 5){
             return 0;
         }
-        else if(power >= 10 && power < 20){
+        else {
             return 1;
         }
-        else if(power >= 20 && power < 30){
-            return 2;
-        }
-        else if(power >= 30 && power < 40){
-            return 3;
-        }
-            return 4;
+    }
+    private int getPowerLevel(double power){
+        if (power < 50) return 0;
+		else return 1;
     }
 }               
 

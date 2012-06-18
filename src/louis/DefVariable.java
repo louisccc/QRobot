@@ -31,10 +31,10 @@ public class DefVariable {
     
     
     public static final int MAX_ZONE = 1;
-    public static final int MAX_ENEMY = 5;
-    public static final int MAX_POWER = 5;
-    public static final int MAX_DISTANCE = 5;
+    public static final int MAX_ENEMY = 2;
+    public static final int MAX_POWER = 2;
+    public static final int MAX_DISTANCE = 2;
     public static final int MAX_EVENT = 5;
-    public static final int MAX_FRESHNESS = 5;
+    public static final int MAX_FRESHNESS = 2;
     
 }

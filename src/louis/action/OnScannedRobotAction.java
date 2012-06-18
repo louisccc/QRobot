@@ -20,7 +20,7 @@ public class OnScannedRobotAction extends Action {
 	
 	public void run(AdvancedRobot robot) {
 		switch (id) {
-			case 51:
+			case 51: case 52: case 53:
 				double absoluteBearing = robot.getHeading() + event.getBearing();
 				double bearingFromGun = normalRelativeAngleDegrees(absoluteBearing - robot.getGunHeading());
 				
@@ -45,11 +45,12 @@ public class OnScannedRobotAction extends Action {
 					robot.scan();
 				}
 				break;
-			case 52: 
+			case 54: 
 				/* crazy's robot */
-				robot.fire(1);
+//				robot.fire(1);
+				robot.fire(3);
 				break;
-			case 53: 
+			case 55: 
 				/* fire's robot */
 				if (event.getDistance() < 50 && robot.getEnergy() > 50) {
 					robot.fire(3);
