@@ -66,8 +66,6 @@ public class QRobot extends AdvancedRobot {
 	Driver driver = null;
 	
 	Driver chooseDriver() {
-		stop();
-		
 		mPreviousState = mCurrentState;
 		mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);		
 		
@@ -88,6 +86,7 @@ public class QRobot extends AdvancedRobot {
 			if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
 				executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
 			}
+			driver.reset();
 			driver = chooseDriver();
 		}
 	}

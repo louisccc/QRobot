@@ -124,6 +124,13 @@ public class Driver {
 	
 	/* Driver's action */
 	
+	public void reset() {
+		robot.stop();
+		robot.setAdjustRadarForRobotTurn(false);
+		robot.setAdjustRadarForGunTurn(false);
+		robot.setAdjustGunForRobotTurn(false);
+	}
+	
 	public void	init() { }
 	public void	loop() { }
 	public void	onBulletHit(BulletHitEvent event) { }
