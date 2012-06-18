@@ -40,6 +40,8 @@ public class SpinBotDriver extends Driver {
 		setGunColor(Color.blue);
 		setRadarColor(Color.black);
 		setScanColor(Color.yellow);
+		
+		resetAngle();
 	}
 
 	public void loop() {

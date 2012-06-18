@@ -41,6 +41,8 @@ public class RamFireDriver extends Driver {
 		setBodyColor(Color.lightGray);
 		setGunColor(Color.gray);
 		setRadarColor(Color.darkGray);
+		
+		resetAngle();
 	}
 	
 	public void loop() {

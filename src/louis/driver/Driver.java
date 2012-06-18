@@ -11,6 +11,7 @@ import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
 import robocode.HitWallEvent;
 import robocode.RobocodeFileOutputStream;
+import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.WinEvent;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
@@ -126,6 +127,28 @@ public class Driver {
 	
 	public void reset() {
 		robot.stop();
+		robot.setAdjustRadarForRobotTurn(false);
+		robot.setAdjustRadarForGunTurn(false);
+		robot.setAdjustGunForRobotTurn(false);
+		robot.setMaxTurnRate(Rules.MAX_TURN_RATE);
+		robot.setMaxVelocity(Rules.MAX_VELOCITY);
+	}
+	
+	public void resetAngle() {
+		robot.stop();
+		
+		robot.setAdjustRadarForRobotTurn(true);
+		robot.setAdjustRadarForGunTurn(true);
+		robot.setAdjustGunForRobotTurn(true);
+
+		double gunAngle = robot.getHeading() - robot.getGunHeading();
+		if (gunAngle < 180) robot.turnGunRight(gunAngle);
+		else robot.turnGunLeft(360 - gunAngle);
+		
+		double radarAngle = robot.getHeading() - robot.getRadarHeading();
+		if (radarAngle < 180) robot.turnRadarRight(radarAngle);
+		else robot.turnRadarLeft(360 - gunAngle);
+		
 		robot.setAdjustRadarForRobotTurn(false);
 		robot.setAdjustRadarForGunTurn(false);
 		robot.setAdjustGunForRobotTurn(false);

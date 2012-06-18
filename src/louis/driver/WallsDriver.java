@@ -43,6 +43,8 @@ public class WallsDriver extends Driver {
 		setRadarColor(Color.orange);
 		setBulletColor(Color.cyan);
 		setScanColor(Color.cyan);
+		
+		resetAngle();
 
 		// Initialize moveAmount to the maximum possible for this battlefield.
 		moveAmount = Math.max(getBattleFieldWidth(), getBattleFieldHeight());

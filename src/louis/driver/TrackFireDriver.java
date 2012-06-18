@@ -41,6 +41,8 @@ public class TrackFireDriver extends Driver {
 		setRadarColor(Color.pink);
 		setScanColor(Color.pink);
 		setBulletColor(Color.pink);
+		
+		resetAngle();
 	}
 	
 	public void loop() {
