@@ -48,8 +48,9 @@ public class QRobot extends AdvancedRobot {
     private Action mPreviousAction = null;
     
     private ScannedRobotEvent lastseen = null;
-    
+    private DataInterface mDataInterface;
     public void readTable() throws Exception{
+        mDataInterface = new DataInterface();
         try {
             BufferedReader r = new BufferedReader(new FileReader(getDataFile("count.dat")));
             String data_row;
@@ -57,6 +58,7 @@ public class QRobot extends AdvancedRobot {
                 String[] splited = data_row.split(" ");
                 if(splited.length == 3){
                     mRawData.add(data_row);
+                    mDataInterface.addDataRow(data_row);
                 }
             }
             r.close();
@@ -67,6 +69,7 @@ public class QRobot extends AdvancedRobot {
             initRawData(mRawData); // forced to initial raw data here
             e.printStackTrace();
         }
+        //mDataInterface.printAllData();
     }
     
     public void initRawData(ArrayList<String> rawdata){
@@ -106,6 +109,9 @@ public class QRobot extends AdvancedRobot {
         for(int i = 0; i < mRawData.size(); i++){
             System.out.println(mRawData.get(i));
         }
+    }
+    public void printDataInterfaceData() {
+        
     }
     public void run() {
         // Set colors
