@@ -1,11 +1,10 @@
 package louis;
 
+import louis.driver.DriverManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import louis.action.Action;
 
 public class DataInterface {
     private HashMap<String, HashMap<Integer, Double> > mHashMap;
@@ -16,7 +15,7 @@ public class DataInterface {
     public void addDataRow(String row){
         String[] splited = row.split(" ");
         String state = splited[0];
-        int action = Integer.parseInt(splited[1]);
+        Integer action = Integer.parseInt(splited[1]);
         double Qvalue = Double.parseDouble(splited[2]);
         if(mHashMap.containsKey(state)){
             HashMap<Integer, Double> h = mHashMap.get(state);
@@ -29,23 +28,8 @@ public class DataInterface {
         }
         
     }
-    
-    public static ArrayList<String> getQValueDataRowsUnderState(ArrayList<String> rawData, RobotState state){
-        ArrayList<String> actionsUnderState = new ArrayList<String>();
-        for(String row : rawData){
-            String[] splited = row.split(" ");
-            if(splited.length == 3 ){
-                String stateString = splited[0];
-                RobotState compare = new RobotState(stateString);
-                if(compare.equal(state)){
-                    actionsUnderState.add(row);
-                }
-            }
-        }
-        return actionsUnderState;
-    }
-    
-    public double getMaxQValueUnderState(ArrayList<String> rawData, RobotState state){
+        
+    public double getMaxQValueUnderState(RobotState state){
         //ArrayList<String> actionsUnderState = getQValueDataRows(rawData, state);
         HashMap<Integer, Double> map = mHashMap.get(state.toString()); 
         double maxQ = -1000;
@@ -61,30 +45,30 @@ public class DataInterface {
         return maxQ;
     }
 
-    public double getQValueByStateAndAction(RobotState state, Action action){
+    public double getQValueByStateAndAction(RobotState state, Integer action){
         double Qvalue = 0;
         if(mHashMap.containsKey(state.toString())){
             HashMap<Integer, Double> map = mHashMap.get(state.toString());
-            if(map.containsKey(Integer.parseInt(action.getId()))){
-                Qvalue = map.get(Integer.parseInt(action.getId()));
+            if(map.containsKey(action)){
+                Qvalue = map.get(action);
             }
         }
         return Qvalue;
     }
     
-    public boolean updateQValueByStateAndAction(ArrayList<String> rawData, RobotState state, Action action, double newQValue){
+    public boolean updateQValueByStateAndAction(RobotState state, Integer action, Double newQValue){
         if(mHashMap.containsKey(state.toString())){
             HashMap<Integer, Double> map = mHashMap.get(state.toString());
-            if(map.containsKey(Integer.parseInt(action.getId()))){
-                map.put(Integer.parseInt(action.getId()), newQValue);
+            if(map.containsKey(action)){
+                map.put(action, newQValue);
             }
         }
         return false;
     }
     
-    public String decideStratgyFromEnvironmentState(ArrayList<String> rawData, RobotState state) {
+    public Integer decideStratgyFromEnvironmentState(RobotState state) {
         ArrayList<Double> actionsQs = new ArrayList<Double>();
-        ArrayList<String> actionsId = new ArrayList<String>();
+        ArrayList<Integer> actionsId = new ArrayList<Integer>();
         double sum = 0;
         
         HashMap<Integer, Double> map = mHashMap.get(state.toString());
@@ -101,7 +85,7 @@ public class DataInterface {
             }
             sum += value;
             actionsQs.add(sum);
-            actionsId.add(i.toString());
+            actionsId.add(key);
             //System.out.println(key + " " + key + " " + value);
         }
         
@@ -114,7 +98,7 @@ public class DataInterface {
         }
         System.out.println("ERROR: Can't decide action for given state: " + state.toString());
 
-        return null;
+        return -1;
     }
     
     public void printAllData(){
@@ -134,4 +118,30 @@ public class DataInterface {
         System.out.println("all " + counter);
     }
     
+	public void initAllData(){
+		ArrayList<String> permutationSet = RobotState.allposibleState();
+		for(String state : permutationSet){
+			HashMap<Integer, Double> map = new HashMap<Integer, Double>();
+			for(int i = 0; i < DriverManager.getNumberOfDriver(); i++){
+				map.put(i, 0.0);
+			}
+			mHashMap.put(state, map);
+		}
+	}
+	
+	public String DatatoString(){
+		String output = new String();
+		Iterator<String> i = mHashMap.keySet().iterator();
+        while(i.hasNext()){
+            String key = i.next().toString();
+            HashMap<Integer, Double> map = mHashMap.get(key);
+            Iterator<Integer> i_2 = map.keySet().iterator();
+            while(i_2.hasNext()){
+                int key2 = i_2.next();
+                double value = map.get(key2);
+				output = output + key + " " + key2 + " " + Double.toString(value) + "\n";
+            }
+        }
+		return output;
+	}
 }

@@ -1,6 +1,6 @@
 package louis;
 
-import louis.action.*;
+import louis.driver.*;
 
 import robocode.AdvancedRobot;
 import robocode.DeathEvent;
@@ -27,13 +27,7 @@ import java.util.ArrayList;
  */
 public class QRobot extends AdvancedRobot {
 
-    /**
-     * TrackFire's run method
-     */
-    
-    //private HashMap<Integer, ArrayList<Double>> mQValueTable;
     private static final String QLearningDataFile = "count.dat";
-    private ArrayList<String> mRawData = new ArrayList<String>();
 
     double gunTurnAmt; // How much to turn our gun when searching
     private String trackName = null;
@@ -41,86 +35,53 @@ public class QRobot extends AdvancedRobot {
     double bulletPower = 1;  /*Narchi*/
     boolean hitEnemy; /*Narchi*/
     
-    
     private RobotState mCurrentState;
     int dist = 50; // distance to move when we're hit
     private RobotState mPreviousState;
-    private Action mPreviousAction = null;
+	Integer previousAction;
     
     private ScannedRobotEvent lastseen = null;
     private DataInterface mDataInterface;
+	
     public void readTable() throws Exception{
         mDataInterface = new DataInterface();
         try {
             BufferedReader r = new BufferedReader(new FileReader(getDataFile("count.dat")));
             String data_row;
             while( (data_row = r.readLine()) !=  null){
-                String[] splited = data_row.split(" ");
-                if(splited.length == 3){
-                    mRawData.add(data_row);
-                    mDataInterface.addDataRow(data_row);
-                }
+				mDataInterface.addDataRow(data_row);
             }
             r.close();
         } catch (IOException e) {
-            initRawData(mRawData); // forced to initial raw data here
+			mDataInterface.initAllData();
             e.printStackTrace();
         } catch (NumberFormatException e) {
-            initRawData(mRawData); // forced to initial raw data here
+			mDataInterface.initAllData();
             e.printStackTrace();
         }
         //mDataInterface.printAllData();
     }
+	
+	Driver driver = null;
+	
+	Driver chooseDriver() {
+		mPreviousState = mCurrentState;
+		mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);
+		
+		Integer actionId = mDataInterface.decideStratgyFromEnvironmentState(mCurrentState);		
+		Driver d = DriverManager.getDriver(actionId, this);
+		d.init();
+		return d;
+	}
     
-    public void initRawData(ArrayList<String> rawdata){
-        //int num_allState = DefVariable.EVENTCOUNT;
-        ArrayList<String> allStates = RobotState.allposibleState();
-		
-		for (String s1 : RobotState.allposibleState(DefVariable.STATE_START)) {
-			for (String s2 : NoEventAction.getAllPossibleActions()) {
-				rawdata.add(s1 + " " + s2 + " 0");
-			}
-		}
-		
-		for (String s1 : RobotState.allposibleState(DefVariable.STATE_ONSCAN1)) {
-			for (String s2 : OnScannedRobotAction.getAllPossibleActions()) {
-				rawdata.add(s1 + " " + s2 + " 0");
-			}
-		}
-		
-		for (String s1 : RobotState.allposibleState(DefVariable.STATE_ONHIT)) {
-			for (String s2 : OnHitRobotAction.getAllPossibleActions()) {
-				rawdata.add(s1 + " " + s2 + " 0");
-			}
-		}
-		
-		for (String s1 : RobotState.allposibleState(DefVariable.STATE_ONHITBYBULLET)) {
-			for (String s2 : OnHitByBulletAction.getAllPossibleActions()) {
-				rawdata.add(s1 + " " + s2 + " 0");
-			}
-		}
-		
-		for (String s1 : RobotState.allposibleState(DefVariable.STATE_END)) {
-			rawdata.add(s1 + " " + " 0 0");
-		}
-    }
-    
-    public void printRawTable() {
-        for(int i = 0; i < mRawData.size(); i++){
-            System.out.println(mRawData.get(i));
-        }
-    }
-    public void printDataInterfaceData() {
-        
-    }
-    public void run() {
+	public void run() {
         // Set colors
         setBodyColor(Color.pink);
         setGunColor(Color.pink);
         setRadarColor(Color.pink);
         setScanColor(Color.pink);
         setBulletColor(Color.pink);
-
+		
         try {
             readTable();
             //printRawTable();
@@ -129,132 +90,58 @@ public class QRobot extends AdvancedRobot {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // Loop forever
-        while (true) {
-//			turnGunRight(10);
-
-			// Decide action
-			mPreviousState = mCurrentState;
-			mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_START);			
-			
-			String actionId = Tool.decideStratgyFromEnvironmentState(mRawData, mCurrentState);
-            mPreviousAction = new NoEventAction(actionId);
-			mPreviousAction.run(this);
-        }
+		
+		driver = chooseDriver();		
+		while (true) {
+			driver.loop();
+		}
     }
 
     /**
      * onScannedRobot:  We have a target.  Go get it.
      */
     public void onScannedRobot(ScannedRobotEvent e) {
-
-        mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_ONSCAN1);
-        
-        lastseen = e;
-        
-        //mCurrentState = DefVariable.STATE_ONSCAN1;
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, mCurrentState);
-        double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        if(mPreviousAction != null){
-            executeQLearningFunction(mRawData, DefVariable.onScanRobotReward, maxQvalue, mPreviousState, mPreviousAction);
-        }
-		
-        String actionId = Tool.decideStratgyFromEnvironmentState(mRawData, mCurrentState);
-		Action action = new OnScannedRobotAction(actionId, e);	
-        
-        mPreviousState = mCurrentState;
-        mPreviousAction = action;
-		
-        action.run(this);
+    	driver.onScannedRobot(e);
     }
-
+	
     public void onHitRobot(HitRobotEvent e){
-        
-        mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_ONHIT);
-        
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, mCurrentState);
-        double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        
-        if(mPreviousAction != null){
-            executeQLearningFunction(mRawData, DefVariable.onHitReward, maxQvalue, mPreviousState, mPreviousAction);
-        }
-        //printRawTable();
         //System.out.println("-----------------on hit robot----------");
-         
-		String actionId = Tool.decideStratgyFromEnvironmentState(mRawData, mCurrentState);
-		Action action = new OnHitRobotAction(actionId, e);	
-        
-        mPreviousState = mCurrentState;
-        mPreviousAction = action;
-		
-        action.run(this);
+        driver.onHitRobot(e);
     }
-
+	
     public void onHitByBullet(HitByBulletEvent e) {
-        mCurrentState = getStateByCurrentEnvironment(DefVariable.STATE_ONHITBYBULLET);
-        
-        String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, mCurrentState);
-        double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        
-        if(mPreviousAction != null){
-            executeQLearningFunction(mRawData, DefVariable.onHitByBulletReward, maxQvalue, mPreviousState, mPreviousAction);
-        }
         //System.out.println("-----------------on hit by bullet----------");
-        
-		
-		String actionId = Tool.decideStratgyFromEnvironmentState(mRawData, mCurrentState);
-		Action action = new OnHitByBulletAction(actionId, e);	
-        
-        mPreviousState = mCurrentState;
-        mPreviousAction = action;
-		
-        action.run(this);        
+        driver.onHitByBullet(e);
     }
     
-    public void onHitByRobot(HitRobotEvent event) {
-        //System.out.println("-----------------on hit by robot----------");
-    }
-    
-    public void onHitWall(HitWallEvent event) {
+    public void onHitWall(HitWallEvent e) {
         //System.out.println("-----------------on hit wall----------");
+		driver.onHitWall(e);
     }
-
+	
     public void onWin(WinEvent e) {
-        
-        //String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
-        //double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        // TODO give max Q 0 ???
-        if(mPreviousAction != null && mPreviousState != null){
-            executeQLearningFunction(mRawData, DefVariable.onWinReward, 0, mPreviousState, mPreviousAction);
-        }
-        this.writeToFile(mRawData, QLearningDataFile);
-     // Victory dance
+//		if(mPreviousAction != null && mPreviousState != null){
+  //          executeQLearningFunction(mRawData, DefVariable.onWinReward, 0, mPreviousState, mPreviousAction);
+    //    }
+		this.writeToFile(QLearningDataFile);
         turnRight(36000);
     }
 	
     public void onDeath(DeathEvent e){
-        
-        //String maxQvalueUnderCurrentStateRow = Tool.getMaxQValueUnderState(mRawData, DefVariable.STATE_END);
-        //double maxQvalue = Double.parseDouble(maxQvalueUnderCurrentStateRow.split(" ")[2]);
-        
-        if(mPreviousAction != null && mPreviousState != null){
-            executeQLearningFunction(mRawData, DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
-        }
-        
-        this.writeToFile(mRawData, QLearningDataFile);
+//		if(mPreviousAction != null && mPreviousState != null){
+  //          executeQLearningFunction(mRawData, DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
+    //    }
+
+		this.writeToFile(QLearningDataFile);
     }
-	
-	private void writeToFile(ArrayList<String> rawData, String fileName) {
+
+	private void writeToFile(String fileName) {
         //System.out.println("Writing File " + System.currentTimeMillis());
 		PrintStream w = null;
 		try {
 			w = new PrintStream(new RobocodeFileOutputStream(getDataFile(fileName)));
 			
-			String inData = new String();
-            for (String s : rawData) {
-                inData = inData + s + "\n";
-            }
-            w.println(inData);
+            w.print(mDataInterface.DatatoString());
             w.close();
         } catch (IOException e1) {
             e1.printStackTrace(out);
@@ -265,14 +152,14 @@ public class QRobot extends AdvancedRobot {
 		}
 	}
     
-    private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, RobotState previousState, Action previousAction){
+/*    private void executeQLearningFunction(ArrayList<String> rawData, int reward, double maxQvalue, RobotState previousState, Action previousAction){
         double alpha = DefVariable.ALPHA;
         double gamma = DefVariable.GAMMA;
         double oldValue = Tool.getQValueByStateAndAction(rawData, previousState, previousAction);
         double newValue = oldValue + alpha*( (double)reward + gamma*maxQvalue - oldValue);
         Tool.updateQValueByStateAndAction(rawData, previousState, previousAction, newValue);
         
-    }
+    }*/
     
     private RobotState getStateByCurrentEnvironment(int eventNumber){
         int numberEnemy = getOthers() > 1 ? 1 : 0;
