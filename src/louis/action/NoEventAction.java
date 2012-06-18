@@ -5,7 +5,7 @@ import robocode.AdvancedRobot;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 public class NoEventAction extends Action {
-	private static String[] allPossibleActionIds = {"1", "2", "3", "4", "5", "6"};
+	private static String[] allPossibleActionIds = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
 	
 	public static String[] getAllPossibleActions() {
 		return allPossibleActionIds;
@@ -35,8 +35,18 @@ public class NoEventAction extends Action {
 			case 6:
 				robot.turnLeft(45);
 				break;
-
-
+			case 7:
+				robot.setTurnRight(100);
+				break;
+			case 8:
+				robot.setTurnRight(90);
+				break;
+			case 9:
+				robot.setTurnRight(0);
+				break;
+			case 10:
+				robot.setTurnRight(-90);
+				break;
 			default: System.out.println("Error: Unrecognize action ID for NoEventAction: " + id);
 				break;
 		}
