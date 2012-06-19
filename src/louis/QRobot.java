@@ -3,6 +3,8 @@ package louis;
 import louis.driver.*;
 
 import robocode.AdvancedRobot;
+import robocode.BulletHitEvent;
+import robocode.BulletMissedEvent;
 import robocode.DeathEvent;
 import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
@@ -72,7 +74,19 @@ public class QRobot extends AdvancedRobot {
 		}
 		return false;
 	}
+	private double accumulated_reward = 0;
 	
+	public void turnRoutine(){
+	    if(isDriverExpire(getTime())){
+            RobotState temp_currentState = detectCurrentState();
+            switchCurrentStateToState( temp_currentState );
+            
+            executeQLearningFunction(accumulated_reward, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
+            accumulated_reward = 0;
+            mCurrentStrategy.reset();
+            mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
+        }
+	}
 	public void run() {
 	    
         setBodyColor(Color.pink);
@@ -88,108 +102,68 @@ public class QRobot extends AdvancedRobot {
             mPreviousState = detectCurrentState();
 			mPreviousAction = DefVariable.NOACTION;
 			mPreviousActionStartedTurn = getTime();
+			accumulated_reward = 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
         mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
 		
 		while (true) {
-		    if(isDriverExpire(getTime())){
-		        RobotState temp_currentState = detectCurrentState();
-		        switchCurrentStateToState( temp_currentState );
-	            
-	            // TODO sum up to accumulated reward ?  and replace 1 with sum up value
-		        
-	            executeQLearningFunction(1, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
-	            
-	            mCurrentStrategy.reset();
-	            mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
-		    }
+		    turnRoutine();
 		    mCurrentStrategy.loop();
 		}
     }
 
     public void onScannedRobot(ScannedRobotEvent e) {
-		if(isDriverExpire(getTime())){
-		    RobotState temp_currentState = detectCurrentState();
-            switchCurrentStateToState( temp_currentState );
-            
-            // TODO sum up to accumulated reward ?  and replace 1 with sum up value
-            
-            executeQLearningFunction(1, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
-            
-            mCurrentStrategy.reset();
-            mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
-		}
-		else{
-		 // If driver is not expired, accumulate the reward number.
-		}
+		turnRoutine();
 		mCurrentStrategy.onScannedRobot(e);
     }
 	
     public void onHitRobot(HitRobotEvent e){
-        if(isDriverExpire(getTime())){
-            RobotState temp_currentState = detectCurrentState();
-            switchCurrentStateToState( temp_currentState );
-            
-            // TODO sum up to accumulated reward ?  and replace 1 with sum up value
-            
-            executeQLearningFunction(1, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
-
-            mCurrentStrategy.reset();
-            mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
+        if(getEnergy() > e.getEnergy()){
+            accumulated_reward = accumulated_reward + 1;
         }
         else{
-         // If driver is not expired, accumulate the reward number.
+            accumulated_reward = accumulated_reward - 1;
         }
+        turnRoutine();
         mCurrentStrategy.onHitRobot(e);
     }
 	
     public void onHitByBullet(HitByBulletEvent e) {
-        if(isDriverExpire(getTime())){
-            RobotState temp_currentState = detectCurrentState();
-            switchCurrentStateToState( temp_currentState );
-            
-            // TODO sum up to accumulated reward ?  and replace 1 with sum up value
-            
-            executeQLearningFunction(1, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
-            
-            mCurrentStrategy.reset();
-            mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));   
-        }
-        else{
-         // If driver is not expired, accumulate the reward number.
-        }
+        accumulated_reward = accumulated_reward - (4 * e.getPower() + 2*Math.max(e.getPower()-1, 0));
+        turnRoutine();
         mCurrentStrategy.onHitByBullet(e);
     }
     
     public void onHitWall(HitWallEvent e) {
-        
-        if(isDriverExpire(getTime())){
-            RobotState temp_currentState = detectCurrentState();
-            switchCurrentStateToState( temp_currentState );
-            
-            // TODO sum up to accumulated reward ?  and replace 1 with sum up value
-            
-            executeQLearningFunction(1, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
-            
-            mCurrentStrategy.reset();
-            mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
-        }
-        else {
-         // If driver is not expired, accumulate the reward number.
-        }
+        accumulated_reward = accumulated_reward - (getVelocity() * 0.5 - 1);
+        turnRoutine();
         mCurrentStrategy.onHitWall(e);
     }
 	
+    public void onBulletHit(BulletHitEvent e){
+        accumulated_reward = accumulated_reward + (4 * e.getBullet().getPower() + 2*Math.max(e.getBullet().getPower()-1, 0));
+        turnRoutine();
+        mCurrentStrategy.onBulletHit(e);
+    }
+    
+    public void onBulletMiss(BulletMissedEvent e){
+        accumulated_reward = accumulated_reward - e.getBullet().getPower();
+        turnRoutine();
+        mCurrentStrategy.onBulletMissed(e);
+    }
+    
     public void onWin(WinEvent e) {
-        executeQLearningFunction(DefVariable.onWinReward, 0, mPreviousState, mPreviousAction);
+        accumulated_reward = accumulated_reward + 60;
+        executeQLearningFunction(accumulated_reward, 0, mPreviousState, mPreviousAction);
 		this.writeToFile(DefVariable.QLEARNING_DATA_FILE);
         turnRight(36000);
     }
 	
     public void onDeath(DeathEvent e){
-	    executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
+        accumulated_reward = accumulated_reward - 60;
+	    executeQLearningFunction(accumulated_reward, 0, mPreviousState, mPreviousAction);
 		this.writeToFile(DefVariable.QLEARNING_DATA_FILE);
     }
 	
@@ -222,8 +196,8 @@ public class QRobot extends AdvancedRobot {
         int numberEnemy = getOthers() > 1 ? 1 : 0;
         int zoneNumber = getAreaZone(getX(), getY());
         int powerLevel = getPowerLevel(getEnergy());
-		
-        RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel);
+		int periodLevel = getPeriodLevel(getTime());
+        RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel, periodLevel);
         return state;
     }
     
@@ -246,27 +220,35 @@ public class QRobot extends AdvancedRobot {
             }
         } else if (x >= 400 && x < 600) {
             if (y < 200) {
+                return 3;
+            } else if (y >= 200 && y < 400) {
+                return 4;
+            } else {
+                return 5;
+            }
+        } else {
+            if (y < 200) {
                 return 6;
             } else if (y >= 200 && y < 400) {
                 return 7;
             } else {
                 return 8;
             }
-        } else {
-            if (y < 200) {
-                return 9;
-            } else if (y >= 200 && y < 400) {
-                return 10;
-            } else {
-                return 11;
-            }
         }
     }
 
     private int getPowerLevel(double power){
-        if (power < 50) return 0;
-		else return 1;
+        if (power < 30) return 0;
+        else if( power < 60) return 1;
+        else if( power < 90) return 2;
+		else return 3;
     }
-    
+
+    private int getPeriodLevel(double time){
+        if (time > 20000){
+            return 1;
+        }
+        return 0;
+    }
 }               
 

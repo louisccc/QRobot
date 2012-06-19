@@ -22,9 +22,11 @@ public class DefVariable {
     
     public static final int NOACTION = -1;
     
-    public static final int NUM_ATTR = 6;
-    public static final int MAX_ZONE = 12;
+    public static final int NUM_ATTR = 4;
+    public static final int MAX_ZONE = 9;
     public static final int MAX_ENEMY = 2;
-    public static final int MAX_POWER = 2;
+    public static final int MAX_POWER = 4;
+    public static final int MAX_PERIOD = 2;
+    
     public static final int MAX_TIMER_TICKS = 200;
 }
