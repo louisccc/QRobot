@@ -4,5 +4,5 @@
 *.jar
 *.war
 *.ear
-*.DT_STORE
+*.DS_Store
 *count.dat
