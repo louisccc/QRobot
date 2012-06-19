@@ -105,7 +105,7 @@ public class QRobot extends AdvancedRobot {
 			// Test if driver is expired
 			if (getTime() - mPreviousActionStartedTurn > 50) {
 				if(mPreviousAction != DefVariable.NOACTION && mPreviousState != null){
-					executeQLearningFunction(DefVariable.onDeathReward, 0, mPreviousState, mPreviousAction);
+					executeQLearningFunction(0, 0, mPreviousState, mPreviousAction);
 				}
 				driver = chooseDriver();
 			}
@@ -154,7 +154,6 @@ public class QRobot extends AdvancedRobot {
 		PrintStream w = null;
 		try {
 			w = new PrintStream(new RobocodeFileOutputStream(getDataFile(fileName)));
-			
             w.print(mDataInterface.DatatoString());
             w.close();
         } catch (IOException e1) {
@@ -186,31 +185,13 @@ public class QRobot extends AdvancedRobot {
         return state;
     }
     private int getAreaZone(double x, double y){
+    
         return 0;
+    
     }
+
     private int getDistanceWithRobot(ScannedRobotEvent e){
         
-/*        if(e == null){
-            return 4;
-        }
-        double x = e.getDistance();
-        if(x > 0 && x < 100){
-            return 0;
-        }
-        else if(x >= 100 && x < 200){
-            return 1;
-        }
-        else if(x>=200 && x<300){
-            return 2;
-        }
-        else if(x>=300 && x<400){
-            return 3;
-        }
-        else if(x>=400){
-            return 4;
-        }
-        return -1;*/
-		
 		if (e == null) return 1;
 		double x = e.getDistance();
         if(x > 0 && x < 250){
@@ -223,25 +204,8 @@ public class QRobot extends AdvancedRobot {
     }
     
     private int getTimeWithRobot(ScannedRobotEvent e){
-/*        if (e == null) return 1;
-        double diff = getTime() - e.getTime();
-        if(diff > 0 && diff < 10){
-            return 0;
-        }
-        else if(diff >= 10 && diff < 20){
-            return 1;
-        }
-        else if(diff >= 20 && diff < 30){
-            return 2;
-        }
-        else if(diff >= 30 && diff < 40){
-            return 3;
-        }
-        else if(diff >= 40){
-            return 4;
-        }
-        return -1;*/
-		if (e == null) return 1;
+
+        if (e == null) return 1;
         double diff = getTime() - e.getTime();
         if(diff < 5){
             return 0;
@@ -250,9 +214,13 @@ public class QRobot extends AdvancedRobot {
             return 1;
         }
     }
+    
     private int getPowerLevel(double power){
+        
         if (power < 50) return 0;
 		else return 1;
+    
     }
+    
 }               
 
