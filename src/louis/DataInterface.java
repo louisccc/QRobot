@@ -14,7 +14,7 @@ public class DataInterface {
     }
     
     public void initAllData(){
-        ArrayList<String> permutationSet = RobotState.allposibleState();
+        ArrayList<String> permutationSet = RobotState.allpossibleState();
         for(String state : permutationSet){
             HashMap<Integer, Double> map = new HashMap<Integer, Double>();
             for(int i = 0; i < DriverManager.getNumberOfDriver(); i++){

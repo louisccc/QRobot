@@ -58,7 +58,7 @@ public class QRobot extends AdvancedRobot {
 	}
 	
 	public RobotState detectCurrentState(){
-	    return getStateByCurrentEnvironment(DefVariable.STATE_START);      
+	    return getStateByCurrentEnvironment();      
 	}
 	
 	public void switchCurrentStateToState(RobotState newState){
@@ -218,52 +218,54 @@ public class QRobot extends AdvancedRobot {
         }
     }
     
-    private RobotState getStateByCurrentEnvironment(int eventNumber){
+    private RobotState getStateByCurrentEnvironment(){
         int numberEnemy = getOthers() > 1 ? 1 : 0;
         int zoneNumber = getAreaZone(getX(), getY());
         int powerLevel = getPowerLevel(getEnergy());
-        int nearestDistance = getDistanceWithRobot(lastseen);
-        int freshness = getTimeWithRobot(lastseen);
-        int event = eventNumber;
 		
-        RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel, nearestDistance, event, freshness);
+        RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel);
         return state;
     }
+    
     private int getAreaZone(double x, double y){
-        return 0;
+        if (x < 200) {
+            if (y < 200) {
+                return 0;
+            } else if (y >= 200 && y < 400) {
+                return 1;
+            } else {
+                return 2;
+            }
+        } else if (x >= 200 && x < 400) {
+            if (y < 200) {
+                return 3;
+            } else if (y >= 200 && y < 400) {
+                return 4;
+            } else {
+                return 5;
+            }
+        } else if (x >= 400 && x < 600) {
+            if (y < 200) {
+                return 6;
+            } else if (y >= 200 && y < 400) {
+                return 7;
+            } else {
+                return 8;
+            }
+        } else {
+            if (y < 200) {
+                return 9;
+            } else if (y >= 200 && y < 400) {
+                return 10;
+            } else {
+                return 11;
+            }
+        }
     }
 
-    private int getDistanceWithRobot(ScannedRobotEvent e){
-        
-		if (e == null) return 1;
-		double x = e.getDistance();
-        if(x > 0 && x < 250){
-            return 0;
-        }
-        else {
-            return 1;
-        }
-
-    }
-    
-    private int getTimeWithRobot(ScannedRobotEvent e){
-
-        if (e == null) return 1;
-        double diff = getTime() - e.getTime();
-        if(diff < 5){
-            return 0;
-        }
-        else {
-            return 1;
-        }
-        
-    }
-    
     private int getPowerLevel(double power){
-        
         if (power < 50) return 0;
 		else return 1;
-    
     }
     
 }               
