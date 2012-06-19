@@ -1,6 +1,9 @@
 package louis;
 
 public class DefVariable {
+    
+    public static final String QLEARNING_DATA_FILE = "count.dat";
+    
     public static final int onWinReward = 100;
     public static final int onDeathReward = -100;
     public static final int onHitReward = 1;
@@ -36,5 +39,7 @@ public class DefVariable {
     public static final int MAX_DISTANCE = 2;
     public static final int MAX_EVENT = 5;
     public static final int MAX_FRESHNESS = 2;
+    
+    public static final int MAX_TIMER_TICKS = 200;
     
 }

@@ -5,16 +5,19 @@ import robocode.Bullet;
 import robocode.BulletHitEvent;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletMissedEvent;
+import robocode.Condition;
 import robocode.DeathEvent;
 import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
 import robocode.HitWallEvent;
 import robocode.RobocodeFileOutputStream;
+import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.WinEvent;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 import java.awt.*;
+import java.io.*;
 
 public class Driver {
 	AdvancedRobot robot;
@@ -73,7 +76,10 @@ public class Driver {
 	
 	/* AdvanceRobot's actions */
 	
+	
+	void	addCustomEvent(Condition condition) { robot.addCustomEvent(condition); }	
 	void	execute() { robot.execute(); }
+	File	getDataFile(String filename) { return robot.getDataFile(filename); }
 	double	getDistanceRemaining() { return robot.getDistanceRemaining(); }
 	double	getGunHeadingRadians() { return robot.getGunHeadingRadians(); }
 	double	getGunTurnRemaining() { return robot.getGunTurnRemaining(); }
@@ -115,8 +121,38 @@ public class Driver {
 	void	turnRadarLeftRadians(double radians) { robot.turnRadarLeftRadians(radians); }
 	void	turnRadarRightRadians(double radians) { robot.turnRadarRightRadians(radians); }
 	void	turnRightRadians(double radians) { robot.turnRightRadians(radians); }
+	void	removeCustomEvent(Condition condition) { robot.removeCustomEvent(condition); }
 	
 	/* Driver's action */
+	
+	public void reset() {
+		robot.stop();
+		robot.setAdjustRadarForRobotTurn(false);
+		robot.setAdjustRadarForGunTurn(false);
+		robot.setAdjustGunForRobotTurn(false);
+		robot.setMaxTurnRate(Rules.MAX_TURN_RATE);
+		robot.setMaxVelocity(Rules.MAX_VELOCITY);
+	}
+	
+	public void resetAngle() {
+		robot.stop();
+		
+		robot.setAdjustRadarForRobotTurn(true);
+		robot.setAdjustRadarForGunTurn(true);
+		robot.setAdjustGunForRobotTurn(true);
+
+		double gunAngle = robot.getHeading() - robot.getGunHeading();
+		if (gunAngle < 180) robot.turnGunRight(gunAngle);
+		else robot.turnGunLeft(360 - gunAngle);
+		
+		double radarAngle = robot.getHeading() - robot.getRadarHeading();
+		if (radarAngle < 180) robot.turnRadarRight(radarAngle);
+		else robot.turnRadarLeft(360 - gunAngle);
+		
+		robot.setAdjustRadarForRobotTurn(false);
+		robot.setAdjustRadarForGunTurn(false);
+		robot.setAdjustGunForRobotTurn(false);
+	}
 	
 	public void	init() { }
 	public void	loop() { }
