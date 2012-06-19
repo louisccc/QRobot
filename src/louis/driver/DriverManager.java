@@ -3,7 +3,7 @@ package louis.driver;
 import robocode.AdvancedRobot;
 
 public class DriverManager {
-	public static Integer getNumberOfDriver() { return 8; }
+	public static Integer getNumberOfDriver() { return 9; }
 	
 	public static Driver getDriver(int driverId, AdvancedRobot robot) {
 		switch (driverId) {
@@ -15,6 +15,7 @@ public class DriverManager {
 			case 5: return new TrackFireDriver(robot);
 			case 6: return new AspirantDriver(robot);
 			case 7: return new DookiousDriver(robot);
+			case 8: return new SuperRamFireDriver(robot);
 			default: return null;
 		}
 	}
