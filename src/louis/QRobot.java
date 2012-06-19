@@ -197,7 +197,7 @@ public class QRobot extends AdvancedRobot {
 		PrintStream w = null;
 		try {
 			w = new PrintStream(new RobocodeFileOutputStream(getDataFile(fileName)));
-            w.print(mDataInterface.DatatoString());
+            w.print(mDataInterface.toStringOfAllData());
             w.close();
         } catch (IOException e1) {
             e1.printStackTrace(out);
