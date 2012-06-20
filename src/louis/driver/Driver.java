@@ -51,7 +51,7 @@ public class Driver {
 	double	getWidth() { return robot.getWidth(); }
 	double	getX() { return robot.getX(); }
 	double	getY() { return robot.getY(); }
-//	void	resume() { robot.resume(); }
+	void	resume() { robot.resume(); }
 	void	scan() { robot.scan(); }
 	void	setAdjustGunForRobotTurn(boolean independent) { robot.setAdjustGunForRobotTurn(independent); }
 	void	setAdjustRadarForGunTurn(boolean independent) { robot.setAdjustRadarForGunTurn(independent); }
@@ -65,8 +65,8 @@ public class Driver {
 	void	setGunColor(Color color) { robot.setGunColor(color); }
 	void	setRadarColor(Color color) { robot.setRadarColor(color); }
 	void	setScanColor(Color color) { robot.setScanColor(color); }
-//	void	stop() { robot.stop(); }
-//	void	stop(boolean overwrite) { robot.stop(overwrite); }
+	void	stop() { robot.stop(); }
+	void	stop(boolean overwrite) { robot.stop(overwrite); }
 	void	turnGunLeft(double degrees) { robot.turnGunLeft(degrees); }
 	void	turnGunRight(double degrees) { robot.turnGunRight(degrees); }
 	void	turnLeft(double degrees) { robot.turnLeft(degrees); }
@@ -122,6 +122,8 @@ public class Driver {
 	void	turnRadarRightRadians(double radians) { robot.turnRadarRightRadians(radians); }
 	void	turnRightRadians(double radians) { robot.turnRightRadians(radians); }
 	void	removeCustomEvent(Condition condition) { robot.removeCustomEvent(condition); }
+	void	waitFor(Condition condition) { robot.waitFor(condition); }
+
 	
 	/* Driver's action */
 	
