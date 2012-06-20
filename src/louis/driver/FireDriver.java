@@ -44,6 +44,7 @@ public class FireDriver extends Driver {
 		setRadarColor(Color.red);
 		setScanColor(Color.red);
 		setBulletColor(Color.red);
+		resetAngle();
 	}
 	
 	// Spin the gun around slowly... forever

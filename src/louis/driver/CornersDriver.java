@@ -49,6 +49,8 @@ public class CornersDriver extends Driver {
 		setBulletColor(Color.green);
 		setScanColor(Color.green);
 
+		resetAngle();
+		
 		// Save # of other bots
 		others = getOthers();
 

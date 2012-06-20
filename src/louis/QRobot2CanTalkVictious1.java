@@ -21,7 +21,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public class QRobot2 extends TeamRobot {
+public class QRobot2CanTalkVictious1 extends TeamRobot {
 
     private RobotState mCurrentState;
     private RobotState mPreviousState;
@@ -52,6 +52,17 @@ public class QRobot2 extends TeamRobot {
         //mDataInterface.printAllData(); for debug
     }
 	
+    public void showOffToAllTeamMate(double reward){
+        try {
+            if (getTeammates() != null) {
+                for (int i = 0; i < getTeammates().length; i++) {
+                    sendMessage(getTeammates()[i], "fuck yea " +  reward);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 	public Driver SwitchDriverTo(Integer actionId) {
 	    System.out.println("actionId : " + actionId);
 		Driver d = DriverManager.getDriver(actionId, this);
@@ -88,9 +99,7 @@ public class QRobot2 extends TeamRobot {
             
             executeQLearningFunction(accumulated_reward, mDataInterface.getMaxQValueUnderState(mCurrentState), mPreviousState, mPreviousAction);
             accumulated_reward = 0;
-            if(mCurrentStrategy!=null){
-                mCurrentStrategy.reset();
-            }
+            mCurrentStrategy.reset();
             mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
         }
 	}
@@ -116,15 +125,6 @@ public class QRobot2 extends TeamRobot {
         mCurrentStrategy = SwitchDriverTo(mDataInterface.decideStratgyFromEnvironmentState(mCurrentState));
 		
 		while (true) {
-            try {
-                if (getTeammates() != null) {
-                    for (int i = 0; i < getTeammates().length; i++) {
-                        sendMessage(getTeammates()[i], "fuck");
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
 		    turnRoutine();
 		    if(mCurrentStrategy != null){
 		        mCurrentStrategy.loop();
@@ -142,9 +142,11 @@ public class QRobot2 extends TeamRobot {
     public void onHitRobot(HitRobotEvent e){
         if(getEnergy() > e.getEnergy()){
             accumulated_reward = accumulated_reward + 1;
+            showOffToAllTeamMate(1);
         }
         else{
             accumulated_reward = accumulated_reward - 1;
+            showOffToAllTeamMate(-1);
         }
         turnRoutine();
         if(mCurrentStrategy != null){
@@ -153,6 +155,7 @@ public class QRobot2 extends TeamRobot {
     }
 	
     public void onHitByBullet(HitByBulletEvent e) {
+        showOffToAllTeamMate(-1 * (4 * e.getPower() + 2*Math.max(e.getPower()-1, 0)));
         accumulated_reward = accumulated_reward - (4 * e.getPower() + 2*Math.max(e.getPower()-1, 0));
         turnRoutine();
         if(mCurrentStrategy != null){
@@ -161,6 +164,7 @@ public class QRobot2 extends TeamRobot {
     }
     
     public void onHitWall(HitWallEvent e) {
+        showOffToAllTeamMate(-1 *(getVelocity() * 0.5 - 1));
         accumulated_reward = accumulated_reward - (getVelocity() * 0.5 - 1);
         turnRoutine();
         if(mCurrentStrategy != null){
@@ -169,6 +173,7 @@ public class QRobot2 extends TeamRobot {
     }
 	
     public void onBulletHit(BulletHitEvent e){
+        showOffToAllTeamMate(4 * e.getBullet().getPower() + 2*Math.max(e.getBullet().getPower()-1, 0));
         accumulated_reward = accumulated_reward + (4 * e.getBullet().getPower() + 2*Math.max(e.getBullet().getPower()-1, 0));
         turnRoutine();
         if(mCurrentStrategy != null){
@@ -177,6 +182,7 @@ public class QRobot2 extends TeamRobot {
     }
     
     public void onBulletMiss(BulletMissedEvent e){
+        showOffToAllTeamMate(-1 * e.getBullet().getPower());
         accumulated_reward = accumulated_reward - e.getBullet().getPower();
         turnRoutine();
         if(mCurrentStrategy != null){
@@ -186,6 +192,7 @@ public class QRobot2 extends TeamRobot {
     
     public void onWin(WinEvent e) {
         accumulated_reward = accumulated_reward + 60;
+        showOffToAllTeamMate(60);
         executeQLearningFunction(accumulated_reward, 0, mPreviousState, mPreviousAction);
 		this.writeToFile(DefVariable.QLEARNING_DATA_FILE);
         turnRight(36000);
@@ -193,12 +200,20 @@ public class QRobot2 extends TeamRobot {
 	
     public void onDeath(DeathEvent e){
         accumulated_reward = accumulated_reward - 60;
+        showOffToAllTeamMate(-60);
 	    executeQLearningFunction(accumulated_reward, 0, mPreviousState, mPreviousAction);
 		this.writeToFile(DefVariable.QLEARNING_DATA_FILE);
     }
 	
     public void onMessageReceived(MessageEvent e){
-        System.out.println(e.getSender() + " sent me: " + e.getMessage());
+        String[] parseMessage = e.getMessage().toString().split(" ");
+        if(parseMessage.length == 3){
+            double reward = Double.parseDouble(parseMessage[2]);
+            System.out.println("reward from teammate " + reward);
+            accumulated_reward = accumulated_reward - 0.6*reward;
+        }
+        turnRoutine();
+        //System.out.println(e.getSender() + " sent me: " + e.getMessage());
     }
     
 	private void writeToFile(String fileName) {

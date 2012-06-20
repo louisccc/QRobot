@@ -53,6 +53,7 @@ public class QRobot extends TeamRobot {
     }
 	
 	public Driver SwitchDriverTo(Integer actionId) {
+	    System.out.println("actionId : " + actionId);
 		Driver d = DriverManager.getDriver(actionId, this);
 		d.init();
 		

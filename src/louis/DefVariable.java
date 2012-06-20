@@ -28,5 +28,5 @@ public class DefVariable {
     public static final int MAX_POWER = 4;
     public static final int MAX_PERIOD = 2;
     
-    public static final int MAX_TIMER_TICKS = 200;
+    public static final int MAX_TIMER_TICKS = 100;
 }

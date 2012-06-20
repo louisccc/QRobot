@@ -48,11 +48,14 @@ public class TrackerDriver extends Driver {
 		setRadarColor(new Color(200, 200, 70));
 		setScanColor(Color.white);
 		setBulletColor(Color.blue);
-
+		
+		resetAngle();
+		
 		// Prepare gun
 		trackName = null; // Initialize to not tracking anyone
 		setAdjustGunForRobotTurn(true); // Keep the gun still when we turn
 		gunTurnAmt = 10; // Initialize gunTurn to 10
+		
 	}
 	
 	public void loop() {

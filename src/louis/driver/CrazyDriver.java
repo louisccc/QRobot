@@ -41,6 +41,7 @@ public class CrazyDriver extends Driver {
 		setRadarColor(new Color(0, 100, 100));
 		setBulletColor(new Color(255, 255, 100));
 		setScanColor(new Color(255, 200, 200));
+		resetAngle();
 	}
 	
 	public void loop() {
