@@ -21,7 +21,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public class QRobot extends TeamRobot {
+public class QRobot2 extends TeamRobot {
 
     private RobotState mCurrentState;
     private RobotState mPreviousState;
@@ -63,7 +63,7 @@ public class QRobot extends TeamRobot {
 	
 	public RobotState detectCurrentState(){
 	    RobotState s = getStateByCurrentEnvironment();
-	    //System.out.println("currentState is : " + s.toString());
+	    System.out.println("currentState is : " + s.toString());
 	    return s;      
 	}
 	
@@ -181,7 +181,6 @@ public class QRobot extends TeamRobot {
     }
 	
     public void onMessageReceived(MessageEvent e){
-        String[] e1 = e.getMessage().toString().split(" ");
         System.out.println(e.getSender() + " sent me: " + e.getMessage());
     }
     

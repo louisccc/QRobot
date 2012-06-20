@@ -109,14 +109,21 @@ public class DataInterface {
         }
         return false;
     }
-    
+
+    public Integer decideStrategyByMax(RobotState state) {
+        HashMap<Integer, Double> map = mHashMap.get(state.toString());
+
+        // find max qvalue key and remove it .
+        Integer maxKey = getMaxQValueKeyUnderState(state);
+
+        return maxKey;
+    }
     public Integer decideStratgyFromEnvironmentState(RobotState state) {
-        
         HashMap<Integer, Double> map = mHashMap.get(state.toString());
         
         // find max qvalue key and remove it .
         Integer maxKey = getMaxQValueKeyUnderState(state);
-        
+      
         double random_distribute_number = Math.random();
         if(random_distribute_number <= 0.8){
             return maxKey;

@@ -21,7 +21,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public class QRobot extends TeamRobot {
+public class QRobotCanTalk1 extends TeamRobot {
 
     private RobotState mCurrentState;
     private RobotState mPreviousState;
@@ -62,9 +62,7 @@ public class QRobot extends TeamRobot {
 	}
 	
 	public RobotState detectCurrentState(){
-	    RobotState s = getStateByCurrentEnvironment();
-	    //System.out.println("currentState is : " + s.toString());
-	    return s;      
+	    return getStateByCurrentEnvironment();      
 	}
 	
 	public void switchCurrentStateToState(RobotState newState){
@@ -181,7 +179,6 @@ public class QRobot extends TeamRobot {
     }
 	
     public void onMessageReceived(MessageEvent e){
-        String[] e1 = e.getMessage().toString().split(" ");
         System.out.println(e.getSender() + " sent me: " + e.getMessage());
     }
     
@@ -211,24 +208,14 @@ public class QRobot extends TeamRobot {
     }
     
     private RobotState getStateByCurrentEnvironment(){
-        int numberEnemy = getEnemyLevel(getOthers());
+        int numberEnemy = getOthers() > 1 ? 1 : 0;
         int zoneNumber = getAreaZone(getX(), getY());
         int powerLevel = getPowerLevel(getEnergy());
 		int periodLevel = getPeriodLevel(getTime());
         RobotState state = new RobotState(zoneNumber, numberEnemy, powerLevel, periodLevel);
         return state;
     }
-    private int getEnemyLevel(int x){
-        if( x == 1 ){
-            return 0;
-        }
-        else if ( x == 2 || x == 3 ){
-            return 1;
-        }
-        else {
-            return 2;
-        }
-    }
+    
     private int getAreaZone(double x, double y){
         if (x < 200) {
             if (y < 200) {
@@ -236,31 +223,31 @@ public class QRobot extends TeamRobot {
             } else if (y >= 200 && y < 400) {
                 return 1;
             } else {
-                return 0;
+                return 2;
             }
         } else if (x >= 200 && x < 400) {
             if (y < 200) {
-                return 1;
+                return 3;
             } else if (y >= 200 && y < 400) {
-                return 2;
+                return 4;
             } else {
-                return 1;
+                return 5;
             }
         } else if (x >= 400 && x < 600) {
             if (y < 200) {
-                return 1;
+                return 3;
             } else if (y >= 200 && y < 400) {
-                return 2;
+                return 4;
             } else {
-                return 1;
+                return 5;
             }
         } else {
             if (y < 200) {
-                return 0;
+                return 6;
             } else if (y >= 200 && y < 400) {
-                return 1;
+                return 7;
             } else {
-                return 0;
+                return 8;
             }
         }
     }
@@ -273,7 +260,7 @@ public class QRobot extends TeamRobot {
     }
 
     private int getPeriodLevel(double time){
-        if (time > 500){
+        if (time > 20000){
             return 1;
         }
         return 0;
